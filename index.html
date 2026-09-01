@@ -169,7 +169,7 @@
 <div class="container" id="learning-screen">
     <div class="top-section">
         <div class="progress-bar"><div id="learning-progress-fill"></div></div>
-        <div style="font-size: 0.95rem; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between;"><span>단어 익히기</span><span><span id="learn-current-idx">1</span> / 80</span></div>
+        <div style="font-size: 0.95rem; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between;"><span>단어 익히기</span><span><span id="learn-current-idx">1</span> / 83</span></div>
     </div>
     <div class="learn-card" style="padding: 20px 15px;">
         <div class="learn-word" id="learn-word-display">대기 중...</div>
@@ -189,7 +189,7 @@
 <div class="container" id="continuous-screen">
     <div class="top-section">
         <div class="progress-bar"><div id="continuous-progress-fill"></div></div>
-        <div style="font-size: 0.95rem; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between;"><span style="color:#27ae60;">연속 듣기 (재생 중)</span><span><span id="cont-current-idx">1</span> / 80</span></div>
+        <div style="font-size: 0.95rem; color: var(--text-sub); font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between;"><span style="color:#27ae60;">연속 듣기 (재생 중)</span><span><span id="cont-current-idx">1</span> / 83</span></div>
     </div>
     <div class="learn-card" style="justify-content: center; min-height: 250px; border-color: #27ae60;">
         <div class="learn-word" id="cont-word-display" style="font-size: 3.5rem; color: #27ae60;">대기 중...</div>
@@ -236,88 +236,91 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzqnC_D8zMi9SOnis4cRldIuqFPtele1Xc27MtgqhtTcsfdbFtPsU8GaB1E30Mku8A/exec";
     
-    // 💡 모든 단어를 소문자로 통일한 2차 평가용 80개 단어 데이터
+    // 💡 모든 단어를 소문자로 통일한 3차 평가용 83개 단어 데이터
     const vocabData = [
-        {word: "international", meaning: "국제적인", sent: "Passengers for [?] flights check in at counter three.", ko: "<b><u>국제선(국제적인)</u></b> 승객들은 3번 카운터에서 탑승 수속을 한다."},
-        {word: "attraction", meaning: "관광명소", sent: "This bus takes visitors to the city's best tourist [?]s.", ko: "이 버스는 방문객들을 도시 최고의 <b><u>관광 명소</u></b>로 데려간다."},
-        {word: "itinerary", meaning: "여행 일정", sent: "The [?] includes a visit to Boston.", ko: "<b><u>여행 일정</u></b>에는 보스턴 방문이 포함되어 있다."},
-        {word: "exotic", meaning: "이국적인, 매혹적인", sent: "Our Web site contains information on numerous [?] vacation spots.", ko: "저희 웹사이트에는 많은 <b><u>이국적</u></b> 휴양지들에 대한 정보가 담겨 있습니다."},
-        {word: "diverse", meaning: "다양한", sent: "A [?] selection of tours is available for London.", ko: "런던에서는 <b><u>다양한</u></b> 관광을 이용할 수 있다."},
-        {word: "superb", meaning: "최고의, 뛰어난", sent: "The service at the hotel was [?].", ko: "그 호텔의 서비스는 <b><u>최고였다</u></b>."},
-        {word: "baggage", meaning: "수화물", sent: "Stow [?] under the seat in front of you.", ko: "<b><u>수화물</u></b>은 앞 좌석 밑에 보관하십시오."},
-        {word: "destination", meaning: "목적지", sent: "Travel agents can provide information about a travel [?].", ko: "여행사 직원들은 여행 <b><u>목적지</u></b>에 대한 정보를 제공해 줄 수 있다."},
-        {word: "missing", meaning: "분실된, 없어진", sent: "The [?] luggage will be sent to the hotel when it is found.", ko: "<b><u>분실된</u></b> 짐은 발견 시 호텔로 보내질 것입니다."},
-        {word: "locate", meaning: "(~의 위치를) 찾아내다, ~을 위치시키다", sent: "Airline staff have tried to [?] the lost luggage.", ko: "항공사 직원들은 잃어버린 짐을 <b><u>찾으려</u></b> 노력했다."},
-        {word: "approximately", meaning: "대략", sent: "A nonstop flight takes [?] 13 hours.", ko: "직항은 <b><u>대략</u></b> 13시간이 걸린다."},
-        {word: "duty", meaning: "관세, 세금, 직무, 의무", sent: "Passengers must pay [?] on goods worth more than $500.", ko: "승객들은 500달러 이상의 물품에 대해 <b><u>관세</u></b>를 지불해야 한다."},
-        {word: "process", meaning: "과정, 처리하다", sent: "The entire airline ticketing [?] can be done online.", ko: "모든 항공권 예약 <b><u>과정</u></b>은 온라인으로 처리될 수 있다."},
-        {word: "board", meaning: "탑승하다, 이사회", sent: "Business class passengers were invited to [?] the plane first.", ko: "비즈니스석 승객들이 먼저 비행기에 <b><u>탑승하도록</u></b> 권유받았다."},
-        {word: "comfortable", meaning: "편안한", sent: "The beds in this hotel are very [?].", ko: "이 호텔의 침대들은 아주 <b><u>편안하다</u></b>."},
-        {word: "declare", meaning: "(세관에) 신고하다", sent: "Goods subject to import fees must be [?]d.", ko: "수입세를 적용받는 물품들은 반드시 <b><u>신고해야</u></b> 합니다."},
-        {word: "specify", meaning: "명시하다", sent: "Travelers can [?] on the form which cities they would like to visit.", ko: "여행객들은 어느 도시를 방문하고 싶은지 양식에 <b><u>명시할</u></b> 수 있다."},
-        {word: "depart", meaning: "출발하다", sent: "Flight QF302 to Sydney [?]s from London Heathrow airport at 10:45 P.M.", ko: "시드니행 QF302편은 오후 10시 45분에 런던 Heathrow 공항에서 <b><u>출발합니다</u></b>."},
-        {word: "emergency", meaning: "비상시, 비상사태", sent: "In case of [?], oxygen masks will automatically drop from above.", ko: "<b><u>비상시</u></b>에는 산소마스크가 위에서 자동으로 떨어질 것입니다."},
-        {word: "passenger", meaning: "승객", sent: "[?]s boarding the cruise ship were welcomed by the captain.", ko: "크루즈 선박에 탑승한 <b><u>승객</u></b>들은 선장의 환영을 받았다."},
-        {word: "outgoing", meaning: "(장소를) 출발하는, 떠나는, (지위를) 떠나는", sent: "[?] trains leave from platforms three to five.", ko: "<b><u>출발하는</u></b> 기차들은 3번에서 5번 승강장에서 떠납니다."},
-        {word: "tightly", meaning: "단단히, 꼭", sent: "Please ensure your hotel room door is locked [?].", ko: "호텔 객실 문이 <b><u>단단히</u></b> 잠겼는지 확인하시기 바랍니다."},
-        {word: "tour", meaning: "견학, 짧은 여행", sent: "The guide gave us a [?] of the manufacturing plant.", ko: "가이드는 우리에게 제조 공장을 <b><u>견학</u></b>시켜 주었다."},
-        {word: "carrier", meaning: "항공사, 수송기, 수송회사", sent: "Flyway Airlines is a popular [?] among travelers because it is inexpensive.", ko: "Flyway Airlines는 저렴하기 때문에 여행객들 사이에서 인기 있는 <b><u>항공사</u></b>이다."},
-        {word: "customarily", meaning: "관례상, 상습적으로", sent: "Italians [?] greet one another with a kiss on the cheek.", ko: "이탈리아 사람들은 <b><u>관례상</u></b> 볼에 입을 맞추며 서로 인사한다."},
-        {word: "confuse", meaning: "혼란시키다", sent: "The building's lack of signs [?]d visitors.", ko: "그 건물은 표지판이 부족해서 방문객들을 <b><u>혼란시켰다</u></b>."},
-        {word: "arrive", meaning: "도착하다", sent: "The tour bus will [?] at its destination on time.", ko: "그 관광버스는 정시에 목적지에 <b><u>도착할</u></b> 것입니다."},
-        {word: "brochure", meaning: "(홍보용) 소책자, 브로셔", sent: "Pick up a sightseeing [?] at the information center.", ko: "안내소에서 관광 <b><u>소책자</u></b>를 가져가세요."},
-        {word: "involve", meaning: "수반하다, 포함하다, 참여시키다", sent: "Getting to Kelford by bus [?]s one transfer.", ko: "버스를 타고 Kelford로 가는 것은 한 번의 환승을 <b><u>수반한다</u></b>."},
-        {word: "ship", meaning: "운송하다, 수송하다, 선박, 배", sent: "The company's fleet [?]s cargo internationally.", ko: "그 회사가 보유한 모든 선박이 화물을 국제적으로 <b><u>운송한다</u></b>."},
-        {word: "suitcase", meaning: "여행가방", sent: "Each person is allowed to check in one [?].", ko: "일 인당 한 개의 <b><u>여행 가방</u></b>을 부치는 것이 허용된다."},
-        {word: "unavailable", meaning: "이용할 수 없는", sent: "The luxury suite is currently [?].", ko: "고급 스위트룸은 현재 <b><u>이용할 수 없습니다</u></b>."},
-        {word: "customs", meaning: "세관", sent: "Hundreds of passengers go through [?] every hour.", ko: "매시간 수백 명의 승객들이 <b><u>세관</u></b>을 통과한다."},
-        {word: "away", meaning: "떨어져서", sent: "The city hall is located about fifteen miles [?] from the convention center.", ko: "시청은 컨벤션 센터로부터 약 15마일 <b><u>떨어져</u></b> 있다."},
-        {word: "dramatic", meaning: "멋진, 극적인, 급격한", sent: "This tour includes admiring the country's most [?] scenery.", ko: "이 여행은 그 나라의 가장 <b><u>멋진</u></b> 경치를 즐기는 것을 포함합니다."},
-        {word: "hospitality", meaning: "환대, 친절", sent: "The guests appreciated the [?] extended to them during their stay.", ko: "손님들은 숙박하는 동안 받은 <b><u>환대</u></b>에 대해 고맙게 생각했다."},
-        {word: "indulge", meaning: "빠지다, 탐닉하다", sent: "[?] in a getaway to the jungles and reefs of Belize.", ko: "벨리즈의 정글과 산호초로의 휴가에 <b><u>빠져</u></b> 보십시오."},
-        {word: "proximity", meaning: "가까움, 근접함", sent: "The conference center is in close [?] to the hotel.", ko: "그 회의장은 호텔에 아주 <b><u>근접해</u></b> 있다."},
-        {word: "seating", meaning: "(집합적) 좌석 설비, 좌석 배열", sent: "The [?] capacity of this airplane is 250 passengers.", ko: "이 비행기의 <b><u>좌석</u></b> 정원은 승객 250명이다."},
-        {word: "unlimited", meaning: "무제한의", sent: "[?] mileage is included with all our car rental quotes.", ko: "자사의 모든 차량 렌탈 견적에는 <b><u>무제한</u></b> 마일리지가 포함되어 있습니다."},
-        {word: "simply", meaning: "그저, 단지, 간단히", sent: "To update your delivery address, [?] reply to this e-mail.", ko: "당신의 배송 주소를 갱신하려면, <b><u>그저</u></b> 이 이메일에 답장만 하면 됩니다."},
-        {word: "besides", meaning: "게다가, 뿐만 아니라, ~외에", sent: "This hotel has the best reviews. [?], it has a swimming pool.", ko: "그 호텔은 평이 가장 좋은 <b><u>데다가</u></b> 수영장도 있다."},
-        {word: "traditionally", meaning: "전통적으로", sent: "The festival is [?] held every February on the Italian island of Sardinia.", ko: "그 축제는 <b><u>전통적으로</u></b> 매년 2월에 이탈리아의 사르디니아 섬에서 열린다."},
-        {word: "proposal", meaning: "제안, 계획", sent: "Ms. Chryssom liked the [?] so much that she decided to invest immediately.", ko: "Ms. Chryssom은 그 <b><u>제안</u></b>이 매우 마음에 들어서 즉시 투자하기로 결정했다."},
-        {word: "alliance", meaning: "동맹, 제휴", sent: "The corporations formed an [?] to protect themselves from competitors.", ko: "그 기업들은 경쟁사로부터 스스로를 보호하기 위해 <b><u>동맹</u></b>을 맺었다."},
-        {word: "stipulation", meaning: "계약 조건", sent: "One of the [?]s was that the goods must be insured.", ko: "<b><u>계약 조건</u></b> 중 하나는 상품이 보험에 가입되어 있어야 한다는 것이었다."},
-        {word: "term", meaning: "조건, 임기, 기한", sent: "We cannot agree to the [?]s offered.", ko: "우리는 제시된 <b><u>조건</u></b>에 동의할 수 없습니다."},
-        {word: "compromise", meaning: "타협, 화해", sent: "The contractors and management finally reached a [?] following several talks.", ko: "수차례의 협의 끝에 하청업체들과 경영진은 마침내 <b><u>타협</u></b>에 이르게 되었다."},
-        {word: "negotiation", meaning: "협상, 교섭", sent: "[?]s are now in process.", ko: "<b><u>협상</u></b>이 현재 진행 중이다."},
-        {word: "agreement", meaning: "계약, 협정, 합의", sent: "The [?] has been signed by both parties.", ko: "<b><u>계약</u></b>은 양측 모두에 의해 서명되었다."},
-        {word: "deadlock", meaning: "교착 상태", sent: "Friday's negotiations ended in a [?].", ko: "금요일 자 협상은 <b><u>교착 상태</u></b>에 빠졌다."},
-        {word: "review", meaning: "검토하다, 재조사하다", sent: "Please [?] all of the documents carefully.", ko: "모든 서류를 주의 깊게 <b><u>검토하시기</u></b> 바랍니다."},
-        {word: "contract", meaning: "계약(서), 계약하다, 수축하다", sent: "The law requires all participants in the transaction to sign a [?].", ko: "법에 따라 거래의 모든 관계자들이 <b><u>계약서</u></b>에 서명해야 한다."},
-        {word: "signature", meaning: "서명", sent: "The CEO's [?] finalized the long-awaited deal.", ko: "최고 경영자의 <b><u>서명</u></b>이 오랫동안 기다려 온 거래를 마무리 지었다."},
-        {word: "originally", meaning: "원래, 처음에는", sent: "The company wants to change the conditions [?] agreed upon.", ko: "그 회사는 <b><u>원래</u></b> 합의되었던 조건을 변경하고 싶어 한다."},
-        {word: "direction", meaning: "방향, 지시, 감독", sent: "Hoping for a settlement, lawyers led the discussion in a different [?].", ko: "합의를 기대하며, 변호사들은 논의를 다른 <b><u>방향</u></b>으로 이끌었다."},
-        {word: "initially", meaning: "처음에는, 초기에", sent: "Managers [?] thought the legal issues would be resolved quickly.", ko: "관리자들은 법적 문제들이 빠르게 해결될 것이라고 <b><u>처음에</u></b> 생각했다."},
-        {word: "expire", meaning: "만료되다", sent: "The previous lease [?]d a few weeks ago.", ko: "이전 임대차 계약이 몇 주 전에 <b><u>만료되었다</u></b>."},
-        {word: "collaborate", meaning: "협력하다, 공동으로 일하다", sent: "Moksel Company and Boston University [?]d on the research project.", ko: "Moksel사와 Boston 대학은 그 연구 프로젝트에 대해 <b><u>협력했다</u></b>."},
-        {word: "dedicate", meaning: "전념하다, 헌신하다, 바치다", sent: "Ms. Barton [?]s herself to ensuring clients get good deals.", ko: "Ms. Barton은 고객들이 좋은 거래를 하도록 보장하는 데 <b><u>전념한다</u></b>."},
-        {word: "revised", meaning: "수정된, 변경한", sent: "The company president accepted the [?] project proposal.", ko: "그 회사 회장은 <b><u>수정된</u></b> 사업 기획안을 받아들였다."},
-        {word: "imperative", meaning: "반드시 해야하는, 필수적인", sent: "It is [?] that the agreement be fully honored.", ko: "계약은 <b><u>반드시</u></b> 철저히 이행되어야 한다."},
-        {word: "cooperatively", meaning: "협력하여, 협조적으로", sent: "The company worked [?] with Pacific Corporation to build the railway.", ko: "그 회사는 철도를 짓기 위해 Pacific사와 <b><u>협력하여</u></b> 일했다."},
-        {word: "commission", meaning: "수수료, 위원회, 의뢰하다, 주문하다", sent: "The new recruit consented to work on [?].", ko: "그 신입 사원은 <b><u>수수료</u></b>를 받고 일하는 데 동의했다."},
-        {word: "omit", meaning: "빠트리다, 생략하다", sent: "Grace rewrote the draft to include details [?]ted from the original.", ko: "Grace는 초안에서 <b><u>빠뜨린</u></b> 세부 사항들을 포함하기 위해 계약서를 다시 작성했다."},
-        {word: "conflict", meaning: "대립, 충돌, 갈등", sent: "The executives had a [?] over when to expand the business internationally.", ko: "경영진은 언제 해외로 사업을 확장할지를 두고 <b><u>대립</u></b>했다."},
-        {word: "proficient", meaning: "능숙한, 능한", sent: "David is [?] in several languages, which helps with international negotiations.", ko: "David는 몇 가지 언어에 <b><u>능숙한</u></b>데, 이는 국제 협상에 도움이 된다."},
-        {word: "confidentiality", meaning: "기밀, 비밀", sent: "Study subjects had to sign a [?] agreement before participating.", ko: "연구의 피험자들은 참여하기 전 <b><u>기밀</u></b> 유지 합의서에 서명해야 했다."},
-        {word: "dispute", meaning: "분쟁, 논쟁", sent: "The [?] over the copyright prompted court action.", ko: "저작권에 관한 <b><u>분쟁</u></b>은 법정 투쟁을 일으켰다."},
-        {word: "objection", meaning: "반대, 이의", sent: "The deal proceeded despite the board of directors' [?]s.", ko: "이사회의 <b><u>반대</u></b>에도 불구하고 그 거래는 진행되었다."},
-        {word: "define", meaning: "규정하다, 정의하다", sent: "The contract [?]d the roles of all parties involved.", ko: "계약서에는 관련된 모든 당사자의 역할이 <b><u>규정되어</u></b> 있다."},
-        {word: "impression", meaning: "인상", sent: "The representative's presentation gave the [?] that his company is well-organized.", ko: "그 대표의 발표는 그의 회사가 잘 조직되어 있다는 <b><u>인상</u></b>을 주었다."},
-        {word: "security", meaning: "보안, 안전, 보호", sent: "[?] is a priority during next week's sensitive negotiation meetings.", ko: "다음 주의 민감한 협상 동안은 <b><u>보안</u></b>이 우선이다."},
-        {word: "proceed", meaning: "진행하다, 진척되다", sent: "Talks concerning the companies' merger are [?]ing well.", ko: "그 회사들의 합병에 관한 회담은 순조로이 <b><u>진행되고</u></b> 있다."},
-        {word: "modify", meaning: "수정하다, 일부 변경하다", sent: "The parties agreed to [?] the wording of some clauses.", ko: "당사자들은 몇 조항의 표현을 <b><u>수정하는</u></b> 데 동의했다."},
-        {word: "narrow", meaning: "(범위 등을) 좁히다", sent: "The number of potential building sites has been [?]ed down to three.", ko: "잠재적인 건축 부지 수가 세 개로 <b><u>좁혀졌다</u></b>."},
-        {word: "settle", meaning: "해결하다, 처리하다", sent: "The management made attempts to [?] the unfair dismissal case.", ko: "경영진은 불공정한 해고 건을 <b><u>해결하기</u></b> 위해 노력했다."},
-        {word: "terminate", meaning: "끝내다, 종결시키다", sent: "The company [?]d the agreement when the project wasn't completed.", ko: "그 회사는 프로젝트가 완료되지 않자 계약을 <b><u>끝냈다</u></b>."},
-        {word: "challenging", meaning: "도전적인, 힘든", sent: "Renovating the new wing proved to be a [?] project.", ko: "새 별관을 개조하는 것은 <b><u>어려운(힘든)</u></b> 프로젝트로 판명되었다."},
-        {word: "foundation", meaning: "토대, 기초", sent: "The proposal served as the [?] on which the agreement was concluded.", ko: "그 제안은 계약이 체결되는 <b><u>토대</u></b>로 작용했다."}
+        {word: "completely", meaning: "완전히, 전적으로", sent: "Every product in our catalog is [?] guaranteed.", ko: "우리 카탈로그의 모든 제품은 <b><u>완전히</u></b> 보증됩니다."},
+        {word: "refuse", meaning: "거절하다, 거부하다", sent: "The shipment was [?]d by the purchaser due to damage caused in transit.", ko: "그 화물은 운송 중 발생한 손상 때문에 구매자에게 인수를 <b><u>거부당했다</u></b>."},
+        {word: "temporarily", meaning: "일시적으로, 임시로", sent: "The popular video game is [?] out of stock in stores, but may be bought online.", ko: "그 인기 비디오 게임은 매장에서 <b><u>일시적으로</u></b> 품절이지만 온라인으로 구매할 수 있다."},
+        {word: "dealer", meaning: "판매업자, 대리점", sent: "Imported vehicles are sold only by licensed car [?]s.", ko: "수입 차량은 허가받은 자동차 <b><u>판매업자</u></b>에 의해서만 판매된다."},
+        {word: "bulk", meaning: "대량, 대규모", sent: "Many factories offer a modest discount for [?] orders.", ko: "많은 공장들이 <b><u>대량</u></b> 주문에 대해 소폭의 할인을 제공한다."},
+        {word: "selection", meaning: "선택, 선별, 선택 가능한 것들", sent: "Our Web site boasts a wide [?] of gift items.", ko: "우리 웹사이트는 다양한 선물 <b><u>상품(선택 가능한 것들)</u></b>을 갖추고 있다."},
+        {word: "inventory", meaning: "재고, 재고 목록", sent: "The [?] in the warehouse is checked at regular intervals.", ko: "창고의 <b><u>재고</u></b>는 정기적으로 점검된다."},
+        {word: "commercial", meaning: "상업의, 상업적인; 광고", sent: "Some [?] products may be subject to import taxes.", ko: "일부 <b><u>상업적인</u></b> 제품에는 수입세가 부과될 수 있다."},
+        {word: "short", meaning: "부족한, 모자라는", sent: "The plant is running [?] on its supply of raw materials.", ko: "그 공장은 원자재 공급이 <b><u>부족해지고</u></b> 있다."},
+        {word: "order", meaning: "주문하다; 주문", sent: "The secretary [?]ed supplies from the main office.", ko: "비서는 본사에 비품을 <b><u>주문했다</u></b>."},
+        {word: "cost", meaning: "비용; 비용이 들다", sent: "Singapore is known for its high [?] of living.", ko: "싱가포르는 높은 생활<b><u>비(비용)</u></b>로 알려져 있다."},
+        {word: "provide", meaning: "제공하다", sent: "We [?] customers with detailed product lists by e-mail.", ko: "우리는 고객들에게 상세한 제품 목록을 이메일로 <b><u>제공한다</u></b>."},
+        {word: "contact", meaning: "연락하다; 연락", sent: "[?] the supplier to request express delivery.", ko: "특급 배송을 요청하려면 공급업체에 <b><u>연락하십시오</u></b>."},
+        {word: "supply", meaning: "공급하다; 공급, 비품", sent: "Novatech can [?] its customers with the latest network equipment.", ko: "Novatech사는 고객들에게 최신 네트워크 장비를 <b><u>공급할 수 있다</u></b>."},
+        {word: "invoice", meaning: "송장, 청구서", sent: "The manufacturer sent an [?] for the production costs.", ko: "제조업체는 생산 비용에 대한 <b><u>송장</u></b>을 보냈다."},
+        {word: "discount", meaning: "할인; 할인하다", sent: "Repeat clients are eligible for a 30 percent [?] on all items.", ko: "재구매 고객은 모든 품목에 대해 30퍼센트 <b><u>할인</u></b>을 받을 수 있다."},
+        {word: "move", meaning: "옮기다, 이동하다; 조치", sent: "Panther Corporation [?]d its Asian headquarters to China.", ko: "Panther사는 아시아 본사를 중국으로 <b><u>이전했다</u></b>."},
+        {word: "distribute", meaning: "배포하다, 유통하다", sent: "The goods were [?]d to local businesses.", ko: "그 상품들은 지역 업체들에 <b><u>유통되었다</u></b>."},
+        {word: "acquisition", meaning: "인수, 취득", sent: "The family's latest [?] is a minivan.", ko: "그 가족이 최근에 <b><u>구입(취득)</u></b>한 것은 미니밴이다."},
+        {word: "assure", meaning: "장담하다, 확신시키다", sent: "RapidFleet [?]s customers that all purchases are delivered promptly.", ko: "RapidFleet사는 모든 구매품이 신속히 배송된다고 고객들에게 <b><u>장담한다</u></b>."},
+        {word: "seek", meaning: "찾다, 구하다", sent: "Fenway Bank is [?]ing a new manager for its Phoenix branch.", ko: "Fenway 은행은 Phoenix 지점의 새 관리자를 <b><u>찾고 있다</u></b>."},
+        {word: "satisfactory", meaning: "만족스러운", sent: "Customers expect [?] responses to their demands.", ko: "고객들은 자신들의 요구에 <b><u>만족스러운</u></b> 답변을 기대한다."},
+        {word: "subject", meaning: "~의 영향을 받는, ~을 겪게 하다", sent: "Prices are [?] to change without advance notice.", ko: "가격은 사전 통지 없이 변경<b><u>될 수(영향을 받을 수)</u></b> 있다."},
+        {word: "confirmation", meaning: "확인, 확정", sent: "Please submit written [?] of your cancellation.", ko: "취소에 대한 서면 <b><u>확인서</u></b>를 제출해 주십시오."},
+        {word: "unable", meaning: "~할 수 없는", sent: "The hotel is [?] to take any more reservations because it is fully booked.", ko: "그 호텔은 예약이 꽉 차서 더 이상 예약을 <b><u>받을 수 없다</u></b>."},
+        {word: "payment", meaning: "지불, 납부금", sent: "Once [?] has been received, the books will be delivered.", ko: "<b><u>결제(지불)</u></b>가 확인되면 책들이 배송될 것이다."},
+        {word: "measure", meaning: "조치, 대책; 측정하다", sent: "The safety [?]s are in place to protect factory workers.", ko: "공장 근로자들을 보호하기 위한 안전 <b><u>조치</u></b>가 시행되고 있다."},
+        {word: "acclaim", meaning: "찬사, 호평; 칭송하다", sent: "Ms. Song's novel won critical [?].", ko: "Song 씨의 소설은 비평가들의 <b><u>찬사</u></b>를 받았다."},
+        {word: "bargain", meaning: "특가품, 흥정", sent: "Stores offer many great [?]s at the end of the year.", ko: "상점들은 연말에 많은 좋은 <b><u>특가 상품</u></b>을 제공한다."},
+        {word: "represent", meaning: "대표하다, 나타내다", sent: "Rounders Properties is looking for an agent to [?] the firm in Europe.", ko: "Rounders Properties사는 유럽에서 회사를 <b><u>대표할</u></b> 대리인을 찾고 있다."},
+        {word: "stock", meaning: "재고, 주식", sent: "This particular model is currently out of [?].", ko: "이 특정 모델은 현재 <b><u>품절(재고 없음)</u></b>이다."},
+        {word: "rating", meaning: "평가, 등급", sent: "The product received a high customer [?].", ko: "그 제품은 고객들로부터 높은 <b><u>평가</u></b>를 받았다."},
+        {word: "affordability", meaning: "가격의 적당성, 감당 가능성", sent: "Consumers are most concerned about the [?] of groceries.", ko: "소비자들은 식료품 가격의 <b><u>적정성</u></b>을 가장 우려한다."},
+        {word: "encompass", meaning: "포함하다, 아우르다", sent: "The agreement [?]es several areas of cooperation.", ko: "그 협정은 여러 협력 분야를 <b><u>포함한다</u></b>."},
+        {word: "clientele", meaning: "고객층, 고객들", sent: "The wealthiest [?] usually shop in luxury stores.", ko: "가장 부유한 <b><u>고객층</u></b>은 대개 고급 상점에서 쇼핑한다."},
+        {word: "finalize", meaning: "마무리하다, 확정하다", sent: "The two companies [?]d the agreement yesterday.", ko: "두 회사는 어제 협정을 최종 <b><u>확정했다</u></b>."},
+        {word: "market", meaning: "시장; 판매하다", sent: "The company plans to [?] the new product overseas.", ko: "그 회사는 신제품을 해외에서 <b><u>판매할</u></b> 계획이다."},
+        {word: "retail", meaning: "소매; 소매의", sent: "Online shops are more popular than most [?] stores nowadays.", ko: "요즘 온라인 상점은 대부분의 <b><u>소매</u></b>점보다 더 인기가 있다."},
+        {word: "commodity", meaning: "상품, 물품", sent: "Export opportunities are opening up in the agricultural [?] sector.", ko: "농산물 <b><u>상품</u></b> 부문에서 수출 기회가 열리고 있다."},
+        {word: "quote", meaning: "견적; 견적을 내다", sent: "The customer requested a price [?] on the merchandise.", ko: "고객은 그 상품에 대한 가격 <b><u>견적</u></b>을 요청했다."},
+        {word: "consignment", meaning: "위탁 판매품, 위탁", sent: "The dealer only sells on [?].", ko: "그 판매업자는 <b><u>위탁 판매</u></b>만 한다."},
+        {word: "fragile", meaning: "깨지기 쉬운", sent: "The package contains [?] items.", ko: "그 소포에는 <b><u>깨지기 쉬운</u></b> 물품이 들어 있다."},
+        {word: "perishable", meaning: "부패하기 쉬운", sent: "[?] goods should be delivered quickly.", ko: "<b><u>부패하기 쉬운</u></b> 상품은 신속하게 배송되어야 한다."},
+        {word: "deliver", meaning: "배달하다, 전달하다", sent: "The courier will [?] the package this afternoon.", ko: "택배 기사가 오늘 오후 소포를 <b><u>배달할</u></b> 것이다."},
+        {word: "ensure", meaning: "확실하게 하다, 보장하다", sent: "Please [?] that the address is correct.", ko: "주소가 정확한지 반드시 <b><u>확인하십시오(확실하게 하십시오)</u></b>."},
+        {word: "courier", meaning: "택배 회사, 배달원", sent: "The documents were sent by [?].", ko: "그 서류들은 특급 <b><u>배달편(배달원)</u></b>으로 보내졌다."},
+        {word: "carton", meaning: "상자, 갑", sent: "The [?] of goods was shipped by sea.", ko: "그 상품 <b><u>상자</u></b>는 해상으로 운송되었다."},
+        {word: "article", meaning: "물품, 물건; 기사", sent: "Several [?]s of clothing are missing from the shipment.", ko: "배송품에서 의류 몇 <b><u>점(물품)</u></b>이 빠져 있다."},
+        {word: "address", meaning: "주소; 다루다", sent: "The [?] is stored in our database.", ko: "그 <b><u>주소</u></b>는 우리 데이터베이스에 저장되어 있다."},
+        {word: "efficient", meaning: "효율적인", sent: "The new delivery system is more [?].", ko: "새 배송 시스템은 더 <b><u>효율적</u></b>이다."},
+        {word: "shipment", meaning: "선적, 배송품", sent: "Freightline specializes in the [?] of food products.", ko: "Freightline사는 식품 <b><u>배송</u></b>을 전문으로 한다."},
+        {word: "agency", meaning: "대행사, 기관", sent: "The shipping [?] handles international deliveries.", ko: "그 운송 <b><u>대행사</u></b>는 국제 배송을 처리한다."},
+        {word: "particularly", meaning: "특히", sent: "The new trade agreement will hurt local business, [?] farmers.", ko: "새 무역 협정은 지역 사업체, <b><u>특히</u></b> 농부들에게 타격을 줄 것이다."},
+        {word: "adequately", meaning: "적절히, 충분히", sent: "The workers ensure that glassware is [?] wrapped.", ko: "근로자들은 유리 제품이 <b><u>충분히</u></b> 포장되도록 한다."},
+        {word: "enclose", meaning: "동봉하다, 둘러싸다", sent: "Please [?] a copy of the receipt.", ko: "영수증 사본을 <b><u>동봉해</u></b> 주십시오."},
+        {word: "careful", meaning: "조심스러운, 주의 깊은", sent: "Dock workers were extra [?] with the crates containing sculptures.", ko: "부두 근로자들은 조각품이 든 상자를 매우 <b><u>조심스럽게</u></b> 다루었다."},
+        {word: "attach", meaning: "붙이다, 첨부하다", sent: "Please [?] the label to the package.", ko: "소포에 라벨을 <b><u>붙여</u></b> 주십시오."},
+        {word: "pick up", meaning: "찾아가다, 수령하다", sent: "You can [?] packages from the reception desk.", ko: "안내 데스크에서 소포를 <b><u>수령할</u></b> 수 있습니다."},
+        {word: "formerly", meaning: "이전에, 예전에", sent: "The warehouse was [?] a factory.", ko: "그 창고는 <b><u>이전에</u></b> 공장이었다."},
+        {word: "carry", meaning: "운반하다, 취급하다", sent: "All delivery drivers are required to [?] at least one piece of identification.", ko: "모든 배송 운전자는 최소 한 개의 신분증을 <b><u>소지해야(취급해야)</u></b> 한다."},
+        {word: "package", meaning: "소포; 포장하다", sent: "The [?] arrived safely.", ko: "그 <b><u>소포</u></b>는 안전하게 도착했다."},
+        {word: "react", meaning: "반응하다", sent: "Customers [?]ed positively to the faster service.", ko: "고객들은 더 빠른 서비스에 긍정적으로 <b><u>반응했다</u></b>."},
+        {word: "content", meaning: "내용물, 내용", sent: "Check the [?]s before signing for the delivery.", ko: "배송 수령 서명 전에 <b><u>내용물</u></b>을 확인하십시오."},
+        {word: "convenience", meaning: "편의, 편리", sent: "For your [?], a tracking number is provided.", ko: "고객님의 <b><u>편의</u></b>를 위해 배송 조회 번호가 제공됩니다."},
+        {word: "separate", meaning: "분리된; 분리하다", sent: "Fragile items should be packed in [?] boxes.", ko: "깨지기 쉬운 물품은 <b><u>별도의(분리된)</u></b> 상자에 포장해야 한다."},
+        {word: "acknowledge", meaning: "인정하다, 수령을 알리다", sent: "The government [?]d the need for reduced trade tariffs.", ko: "정부는 무역 관세 인하의 필요성을 <b><u>인정했다</u></b>."},
+        {word: "remarkable", meaning: "주목할 만한, 놀라운", sent: "The company achieved [?] growth in deliveries.", ko: "그 회사는 배송 부문에서 <b><u>놀라운</u></b> 성장을 이루었다."},
+        {word: "caution", meaning: "주의, 조심", sent: "Please use [?] when unpacking your order.", ko: "주문품의 포장을 풀 때 <b><u>주의</u></b>하십시오."},
+        {word: "handle", meaning: "다루다, 처리하다", sent: "This package should be [?]d with care.", ko: "이 소포는 주의해서 <b><u>다루어야</u></b> 한다."},
+        {word: "correspondence", meaning: "서신, 통신문", sent: "Please send all [?] to this address.", ko: "모든 <b><u>서신</u></b>은 이 주소로 보내 주십시오."},
+        {word: "warehouse", meaning: "창고, 저장소", sent: "Cargo goes to the [?] before being delivered to their respective companies.", ko: "화물은 각 회사에 배송되기 전에 <b><u>창고</u></b>로 간다."},
+        {word: "exclusion", meaning: "제외, 배제", sent: "The price includes delivery with the [?] of remote areas.", ko: "가격에는 외딴 지역을 <b><u>제외한</u></b> 배송비가 포함된다."},
+        {word: "impose", meaning: "부과하다, 강요하다", sent: "The government plans to [?] taxes on imported steel.", ko: "정부는 수입 철강에 세금을 <b><u>부과할</u></b> 계획이다."},
+        {word: "recipient", meaning: "수령인, 받는 사람", sent: "Please enter the [?]'s shipping address.", ko: "<b><u>수령인</u></b>의 배송 주소를 입력해 주십시오."},
+        {word: "storage", meaning: "보관, 저장소", sent: "Unclaimed packages will be placed in [?] for six months.", ko: "찾아가지 않은 소포는 6개월 동안 <b><u>보관</u></b>된다."},
+        {word: "affix", meaning: "붙이다, 첨부하다", sent: "[?] the shipping label securely to the carton.", ko: "배송 라벨을 상자에 단단히 <b><u>붙이십시오</u></b>."},
+        {word: "detach", meaning: "떼다, 분리하다", sent: "Please [?] and send in the completed form.", ko: "작성한 양식을 <b><u>떼어 내어</u></b> 보내 주십시오."},
+        {word: "incorrect", meaning: "부정확한, 잘못된", sent: "An [?] address may delay delivery.", ko: "<b><u>잘못된</u></b> 주소는 배송을 지연시킬 수 있다."},
+        {word: "envelope", meaning: "봉투", sent: "A return address must be stamped on each [?].", ko: "각 <b><u>봉투</u></b>에는 반송 주소가 표시되어 있어야 한다."},
+        {word: "oblige", meaning: "의무적으로 ~하게 하다", sent: "The importers were [?]d to destroy 20,000 boxes of apples.", ko: "수입업자들은 사과 2만 상자를 <b><u>의무적으로 폐기해야</u></b> 했다."},
+        {word: "step", meaning: "단계, 조치", sent: "The importer completed the final [?] of customs formalities.", ko: "수입업자는 세관 절차의 마지막 <b><u>단계</u></b>를 완료했다."},
+        {word: "distinctive", meaning: "독특한, 특색 있는", sent: "Maple syrup is Canada's most [?] export product.", ko: "메이플 시럽은 캐나다의 가장 <b><u>독특한</u></b> 수출품이다."},
+        {word: "discreet", meaning: "신중한, 조심스러운, 분별 있는", sent: "Delivery companies must be [?] with customers' personal information.", ko: "배송 회사는 고객의 개인정보를 <b><u>신중하게</u></b> 다루어야 한다."}
     ];
 
     let currentIdx = 0, score = 0, userName = "", quizSet = [], selectedBaseMode = "", wrongQuestions = [];
@@ -444,13 +447,13 @@
     }
     function playCurrentWordSequence() {
         const item = vocabData[learnCurrentIdx];
-        speakText(item.word, 'en-US', 0.8, () => {
+        speakText(item.word, 'en-US', 1.0, () => {
             learningTimeout1 = setTimeout(() => {
                 document.getElementById('learn-meaning-display').innerText = item.meaning; document.getElementById('learn-meaning-display').style.opacity = '1';
                 speakText(item.meaning, 'ko-KR', 1.0, () => {
                     learningTimeout2 = setTimeout(() => {
                         document.getElementById('learn-eng-display').innerHTML = item.sent.replace("[?]", `<span style="color:var(--primary); font-weight:bold;">${item.word}</span>`); document.getElementById('learn-eng-display').style.opacity = '1';
-                        speakText(item.sent.replace("[?]", item.word), 'en-US', 0.75, () => {
+                        speakText(item.sent.replace("[?]", item.word), 'en-US', 1.0, () => {
                             learningTimeout3 = setTimeout(() => { 
                                 document.getElementById('learn-ko-sent-display').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, ""); 
                                 document.getElementById('learn-ko-sent-display').style.opacity = '1'; 
@@ -473,7 +476,7 @@
         document.getElementById('cont-current-idx').innerText = contCurrentIdx + 1;
         document.getElementById('continuous-progress-fill').style.width = (contCurrentIdx / vocabData.length * 100) + "%";
         document.getElementById('cont-word-display').innerText = item.word; document.getElementById('cont-ko-display').innerText = item.meaning;
-        speakText(item.word, 'en-US', 0.8, () => {
+        speakText(item.word, 'en-US', 1.0, () => {
             contTimeout1 = setTimeout(() => {
                 speakText(item.meaning, 'ko-KR', 1.0, () => { contTimeout2 = setTimeout(() => { contCurrentIdx++; playContinuousSequence(); }, 1200); });
             }, 800);
