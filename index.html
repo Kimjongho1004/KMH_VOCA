@@ -81,20 +81,32 @@
         .history-list { text-align: left; max-height: 60vh; overflow-y: auto; margin-bottom: 20px; padding: 0 5px; }
         .history-item { background: #fff; border: 1px solid #eef2f6; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
 
-        /* 🌟 핵심 수정: 모바일 키보드 대응 완벽 레이아웃 (비 내리기, 타자 게임) */
+        /* 모바일 키보드 대응 완벽 레이아웃 */
         #minigame-rain, #minigame-typing {
             display: none; flex-direction: column; justify-content: center;
             position: fixed; top: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 600px; margin: 0; padding: 15px; box-sizing: border-box;
             background: white; z-index: 1000;
             overscroll-behavior: none; touch-action: none;
-            /* 높이는 JS visualViewport가 동적으로 제어합니다 */
             min-height: 0 !important; 
         }
 
-        /* 게임 스타일: 산성비 */
+        /* 🌟 1. 게임 스타일: 산성비 (지그재그 & 보너스 추가) */
         .rain-container { flex-grow: 1; flex-shrink: 1; min-height: 0; position: relative; background: #eef2f6; border-radius: 15px; overflow: hidden; margin-bottom: 10px; border: 3px solid #dce4ec; }
-        .falling-word { position: absolute; font-size: 1.15rem; font-weight: 900; color: white; padding: 6px 14px; background: var(--primary); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; transition: top 0.05s linear; border: 2px solid rgba(255,255,255,0.8); }
+        .falling-word { position: absolute; font-size: 1.15rem; font-weight: 900; color: white; padding: 6px 14px; background: var(--primary); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; transition: top 0.05s linear, left 0.05s linear, transform 0.2s; border: 2px solid rgba(255,255,255,0.8); }
+        
+        /* 보너스 단어 스타일 */
+        @keyframes pulseBonus { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .bonus-word { animation: pulseBonus 0.8s infinite; border-width: 3px; font-size: 1.25rem; }
+        .bonus-freeze { background: #0984e3; border-color: #74b9ff; }
+        .bonus-slow { background: #00b894; border-color: #55efc4; }
+        .bonus-life { background: #f39c12; border-color: #f1c40f; }
+        .bonus-push { background: #8e44ad; border-color: #9b59b6; }
+        .bonus-bomb { background: #c0392b; border-color: #ff7675; }
+
+        /* 토스트 팝업 (이벤트 발생 시 표시) */
+        .rain-toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 15px 30px; border-radius: 30px; font-size: 1.5rem; font-weight: 900; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; z-index: 10; white-space: nowrap; }
+        .rain-toast.show { opacity: 1; transform: translate(-50%, -60%); }
 
         /* 게임 스타일: 타자 */
         .typing-target { font-size: 1.3rem; font-weight: 800; color: #2c3e50; line-height: 1.6; margin-bottom: 20px; background: #f8f9fa; padding: 25px; border-radius: 15px; border-left: 5px solid #2ecc71; word-break: break-word; }
@@ -176,7 +188,7 @@
             <div class="section-header" style="color: #d35400;">🎮 미니 게임 (랭킹 도전!)</div>
             <button class="menu-card" onclick="startRainGame()">
                 <div class="menu-icon" style="background: #fff3cd; color: #d35400;">🌧️</div>
-                <div class="menu-text"><div class="menu-title">단어 비 내리기</div><div class="menu-desc">떨어지는 단어를 타이핑해 방어!</div></div>
+                <div class="menu-text"><div class="menu-title">단어 비 내리기</div><div class="menu-desc">지그재그 낙하! 보너스 단어를 노려라!</div></div>
             </button>
             <button class="menu-card" onclick="startTypingGame()">
                 <div class="menu-icon" style="background: #fff3cd; color: #d35400;">⌨️</div>
@@ -274,15 +286,18 @@
     </div>
 </div>
 
-<!-- 🎮 미니 게임 1: 단어 비 내리기 (키보드 대응 100% 레이아웃) -->
+<!-- 🎮 미니 게임 1: 단어 비 내리기 (지그재그 & 보너스 추가) -->
 <div id="minigame-rain">
     <div class="game-top-bar" style="flex-shrink: 0; margin-bottom: 10px;">
         <span>점수: <span id="rain-score">0</span></span>
         <span style="color:var(--danger)">생명력: <span id="rain-life">5</span></span>
     </div>
     
-    <!-- 비 내리는 컨테이너는 키보드가 올라오면 남은 공간만큼 알아서 줄어듭니다 -->
-    <div class="rain-container" id="rain-container"></div>
+    <!-- 비 내리는 컨테이너 -->
+    <div class="rain-container" id="rain-container">
+        <!-- 보너스 안내 토스트 팝업 -->
+        <div id="rain-toast" class="rain-toast"></div>
+    </div>
     
     <div style="flex-shrink: 0; display: flex; gap: 8px;">
         <input type="text" id="rain-input" placeholder="단어 입력 (Enter)" autocomplete="off" onkeypress="if(event.key === 'Enter') checkRainWord()" style="margin-bottom: 0; flex-grow: 1; font-size: 1.1rem; padding: 12px;">
@@ -337,7 +352,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzqnC_D8zMi9SOnis4cRldIuqFPtele1Xc27MtgqhtTcsfdbFtPsU8GaB1E30Mku8A/exec";
     
-    // 💡 3차 평가용 83개 단어 데이터
+    // 💡 3차 평가용 83개 단어 데이터 (유지)
     const vocabData = [
         {word: "completely", meaning: "완전히, 전적으로", sent: "Every product in our catalog is [?] guaranteed.", ko: "우리 카탈로그의 모든 제품은 <b><u>완전히</u></b> 보증됩니다."},
         {word: "refuse", meaning: "거절하다, 거부하다", sent: "The shipment was [?]d by the purchaser due to damage caused in transit.", ko: "그 화물은 운송 중 발생한 손상 때문에 구매자에게 인수를 <b><u>거부당했다</u></b>."},
@@ -495,7 +510,6 @@
         let history = JSON.parse(localStorage.getItem('vocaHistory')) || [];
         const now = new Date();
         const dateString = `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        
         let modeName = "";
         if(mode === 'multiple') modeName = "객관식";
         else if(mode === 'subjective') modeName = "주관식";
@@ -646,7 +660,7 @@
     }
 
     // ==========================================
-    // 🎮 미니 게임 로직 (모바일 키보드 최적화)
+    // 🎮 미니 게임 공통 및 유틸
     // ==========================================
     let currentMinigame = "";
     let minigameScore = 0;
@@ -654,14 +668,14 @@
 
     function clearAllGameTimers() { gameIntervals.forEach(clearInterval); gameIntervals = []; }
     
-    // 💡 화면 크기 자동 조절기능 (키보드 팝업 시 게임 공간 압축)
+    // 키보드 높이 감지 자동 리사이징
     function adjustGameContainerHeight() {
         const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         ['minigame-rain', 'minigame-typing'].forEach(id => {
             const el = document.getElementById(id);
             if (el && el.style.display === 'flex') {
                 el.style.height = h + 'px';
-                window.scrollTo(0, 0); // 스크롤을 항상 최상단으로 유지
+                window.scrollTo(0, 0); 
             }
         });
     }
@@ -712,59 +726,110 @@
         }
     }
 
-    // 🌧️ 1. 단어 비 내리기 (산성비)
+    // ==========================================
+    // 🌧️ 1. 단어 비 내리기 (지그재그 낙하 & 스페셜 보너스 이벤트)
+    // ==========================================
     let rainWords = [], rainLife = 5;
+    let rainSpeedBase = 1.0; // 기본 낙하 속도
+    let rainSpeedMod = 1.0;  // 거북이 이벤트 시 조절용 계수
+    let rainFreeze = false;  // 얼음 이벤트용 플래그
+    
+    const BONUS_TYPES = ['freeze', 'slow', 'life', 'push', 'bomb'];
+    const BONUS_KOR = { 'freeze': '🧊 얼음!', 'slow': '🐌 거북이 모드!', 'life': '💖 생명력 +1', 'push': '🌪️ 태풍!', 'bomb': '💣 폭탄 제거!' };
+
     function startRainGame() {
         hideAllScreens(); 
         const rainContainer = document.getElementById('minigame-rain');
         rainContainer.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // 화면 스크롤 완전 차단
+        document.body.style.overflow = 'hidden'; 
         
-        document.getElementById('rain-container').innerHTML = '';
-        minigameScore = 0; rainLife = 5; updateRainStats();
+        document.getElementById('rain-container').innerHTML = '<div id="rain-toast" class="rain-toast"></div>';
+        minigameScore = 0; rainLife = 5; 
+        rainSpeedBase = 1.0; rainSpeedMod = 1.0; rainFreeze = false;
+        updateRainStats();
         
         const inputField = document.getElementById('rain-input');
         inputField.value = '';
-        
         adjustGameContainerHeight();
         
-        // 키보드가 먼저 올라오도록 입력창 포커스 후 게임 시작
         setTimeout(() => {
             inputField.focus();
-            setTimeout(() => {
-                startRainLoop();
-            }, 500);
+            setTimeout(() => { startRainLoop(); }, 500);
         }, 100);
     }
     
     function startRainLoop() {
         rainWords = []; clearAllGameTimers();
         let spawnRate = 2000;
-        let speed = 1.2;
         
+        // 단어 스폰 타이머
         gameIntervals.push(setInterval(() => {
-            if(rainLife <= 0) return;
+            if(rainLife <= 0 || rainFreeze) return;
             const wordData = vocabData[Math.floor(Math.random() * vocabData.length)];
             const span = document.createElement('span');
+            
+            // 💡 보너스 단어 생성 확률 (약 20%)
+            let isBonus = Math.random() < 0.2;
+            let myBonusType = null;
+            
             span.className = 'falling-word';
             span.innerText = wordData.word;
-            span.style.left = Math.random() * 65 + "%"; 
+            
+            if(isBonus) {
+                myBonusType = BONUS_TYPES[Math.floor(Math.random() * BONUS_TYPES.length)];
+                span.classList.add('bonus-word', `bonus-${myBonusType}`);
+            }
+
+            // 시작 X 위치 (0% ~ 70% 사이 무작위)
+            let startX = Math.random() * 70;
+            // X축 이동 속도 (대각선 지그재그용. 좌측 or 우측 방향)
+            let vx = (Math.random() * 0.8 + 0.3) * (Math.random() < 0.5 ? 1 : -1); 
+
+            span.style.left = startX + "%"; 
             span.style.top = "-40px";
             document.getElementById('rain-container').appendChild(span);
-            rainWords.push({ el: span, text: wordData.word, top: -40 });
             
-            if(minigameScore > 0 && minigameScore % 50 === 0) speed += 0.2; 
+            rainWords.push({ 
+                el: span, text: wordData.word, 
+                top: -40, left: startX, vx: vx, 
+                isBonus: isBonus, bonusType: myBonusType, isDead: false 
+            });
+            
+            // 점수에 비례하여 스폰 속도 및 기본 낙하 속도 미세 증가
+            if(minigameScore > 0 && minigameScore % 50 === 0) {
+                rainSpeedBase += 0.05; 
+            }
         }, spawnRate));
         
+        // 단어 낙하 및 지그재그 이동 타이머 (초당 20프레임)
         gameIntervals.push(setInterval(() => {
+            if(rainFreeze) return; // 얼음 상태면 멈춤
+            
             const containerHeight = document.getElementById('rain-container').offsetHeight;
             for(let i = rainWords.length - 1; i >= 0; i--) {
                 let w = rainWords[i];
-                w.top += speed;
+                if(w.isDead) continue;
+
+                // 수직 낙하
+                w.top += (rainSpeedBase * rainSpeedMod);
+                // 수평 지그재그 이동
+                w.left += (w.vx * rainSpeedMod);
+
+                // 좌우 벽 충돌 판정 (0% ~ 75% 사이에서 튕김)
+                if(w.left <= 0) { w.left = 0; w.vx *= -1; }
+                if(w.left >= 75) { w.left = 75; w.vx *= -1; }
+
                 w.el.style.top = w.top + "px";
+                w.el.style.left = w.left + "%";
+                
+                // 바닥에 닿았을 때
                 if(w.top > containerHeight - 40) {
-                    w.el.remove(); rainWords.splice(i, 1);
+                    w.el.remove(); w.isDead = true; rainWords.splice(i, 1);
                     rainLife--; updateRainStats();
+                    
+                    const rc = document.getElementById('rain-container');
+                    rc.style.borderColor = "var(--danger)"; setTimeout(() => rc.style.borderColor = "#dce4ec", 300);
+
                     if(rainLife <= 0) showMinigameResult("rain", "🌧️ 단어 비 내리기", minigameScore);
                 }
             }
@@ -775,17 +840,84 @@
         const input = document.getElementById('rain-input');
         const val = input.value.trim().toLowerCase();
         let matched = false;
+        
         for(let i = 0; i < rainWords.length; i++) {
-            if(rainWords[i].text.toLowerCase() === val) {
-                rainWords[i].el.remove(); rainWords.splice(i, 1);
-                minigameScore += 10; updateRainStats(); matched = true; break;
+            if(!rainWords[i].isDead && rainWords[i].text.toLowerCase() === val) {
+                let w = rainWords[i];
+                w.el.remove(); w.isDead = true; 
+                minigameScore += 10; 
+                
+                // 💡 보너스 효과 발동
+                if(w.isBonus) triggerBonusEvent(w.bonusType);
+                
+                rainWords.splice(i, 1);
+                updateRainStats(); 
+                matched = true; 
+                break;
             }
         }
         if(matched) input.value = '';
     }
-    function updateRainStats() { document.getElementById('rain-score').innerText = minigameScore; document.getElementById('rain-life').innerText = rainLife; }
 
-    // ⌨️ 2. 스피드 문장 타자 (180초로 연장 완료)
+    function triggerBonusEvent(type) {
+        showRainToast(BONUS_KOR[type]);
+        
+        if (type === 'freeze') {
+            rainFreeze = true;
+            setTimeout(() => { rainFreeze = false; }, 3000);
+        } 
+        else if (type === 'slow') {
+            rainSpeedMod = 0.3; // 속도 대폭 감소
+            setTimeout(() => { rainSpeedMod = 1.0; }, 5000);
+        } 
+        else if (type === 'life') {
+            rainLife++; 
+            updateRainStats();
+        } 
+        else if (type === 'push') {
+            // 모든 단어 위로 밀어내기
+            rainWords.forEach(w => {
+                if(!w.isDead) { w.top -= 120; if(w.top < -40) w.top = -40; }
+            });
+        } 
+        else if (type === 'bomb') {
+            // 화면에서 가장 아래(y가 높은)에 있는 단어 최대 2개 제거
+            let activeWords = rainWords.filter(w => !w.isDead);
+            activeWords.sort((a, b) => b.top - a.top); 
+            
+            let removedCount = 0;
+            for(let i = 0; i < activeWords.length; i++) {
+                if(removedCount >= 2) break;
+                let bw = activeWords[i];
+                bw.isDead = true;
+                bw.el.style.transform = "scale(0) rotate(180deg)";
+                bw.el.style.opacity = "0";
+                setTimeout(() => bw.el.remove(), 300);
+                minigameScore += 5; // 폭탄 제거 보너스 점수
+                removedCount++;
+            }
+            // isDead 상태인 것들 배열에서 청소
+            rainWords = rainWords.filter(w => !w.isDead);
+            updateRainStats();
+        }
+    }
+
+    function showRainToast(msg) {
+        const toast = document.getElementById('rain-toast');
+        if(!toast) return;
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    function updateRainStats() { 
+        document.getElementById('rain-score').innerText = minigameScore; 
+        document.getElementById('rain-life').innerText = rainLife; 
+    }
+
+    // ==========================================
+    // ⌨️ 2. 스피드 문장 타자 (180초 유지)
+    // ==========================================
     let typeTime = 180, currentTypeTarget = "";
     function startTypingGame() {
         hideAllScreens(); 
@@ -822,37 +954,34 @@
         if(val === currentTypeTarget) { minigameScore += 20; document.getElementById('type-score').innerText = minigameScore; nextTypingSentence(); }
     }
 
-    // 🃏 3. 단어 짝맞추기 (완전히 똑같은 카드 2장 찾기)
+    // ==========================================
+    // 🃏 3. 단어 짝맞추기 (동일한 카드 2장 찾기)
+    // ==========================================
     let matchCards = [], firstMatch = null, matchPairsFound = 0, matchTime = 0;
     function startMatchGame() {
         hideAllScreens(); document.getElementById('minigame-match').style.display = 'flex';
         minigameScore = 0; matchPairsFound = 0; matchTime = 0; firstMatch = null; clearAllGameTimers();
         document.getElementById('match-score').innerText = matchPairsFound; document.getElementById('match-time').innerText = matchTime;
         
-        // 무작위 6개 단어 추출
         let selected = vocabData.sort(() => Math.random() - 0.5).slice(0, 6);
         let deck = [];
         
-        // 💡 완전히 똑같은 카드(단어+뜻 묶음)를 2장씩 생성 (총 12장)
         selected.forEach((item, idx) => { 
             let cardObj = { text: item.word, hint: item.meaning, id: idx };
             deck.push(cardObj, cardObj); 
         });
         
-        deck.sort(() => Math.random() - 0.5); // 섞기
+        deck.sort(() => Math.random() - 0.5); 
         
         const container = document.getElementById('match-container'); container.innerHTML = '';
         deck.forEach((card, idx) => {
             const btn = document.createElement('div'); btn.className = 'match-card';
-            
-            // 카드를 뒤집었을 때 단어와 뜻이 함께 보입니다.
             btn.innerHTML = `
                 <div class="card-content">
                     <div class="match-word">${card.text}</div>
                     <div class="match-mean">${card.hint}</div>
                 </div>
             `;
-            
             btn.onclick = () => flipMatchCard(btn, card);
             container.appendChild(btn);
         });
