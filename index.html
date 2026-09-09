@@ -20,7 +20,7 @@
             width: 100%; max-width: 600px; min-height: 100vh; background: white; 
             display: flex; flex-direction: column; 
             padding: 25px 20px; text-align: center; 
-            margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: relative;
+            margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: relative; overflow: hidden;
         }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -42,8 +42,9 @@
         .btn-outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
         .btn-subtle { background: #f0f4f8; color: var(--text-sub); font-size: 1.05rem; }
         .btn-history { background: #fff3cd; color: #d35400; border: 2px solid #ffe69c; padding: 15px; margin-top: 5px; }
+        .btn-share { background: #fee500; color: #3c1e1e; font-weight: 800; border-radius: 16px; }
         
-        #mode-screen, #game-screen, #score-screen, #learning-screen, #continuous-screen, #history-screen { display: none; flex-direction: column; justify-content: center; flex-grow: 1; }
+        #mode-screen, #game-screen, #score-screen, #learning-screen, #continuous-screen, #history-screen, #minigame-rain, #minigame-typing, #minigame-match, #game-result-screen { display: none; flex-direction: column; justify-content: center; flex-grow: 1; }
         
         .progress-bar { height: 8px; background: #eef2f6; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
         #progress-fill, #learning-progress-fill, #continuous-progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s ease-out; }
@@ -77,13 +78,24 @@
         .menu-title { font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 3px; }
         .menu-desc { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; word-break: keep-all; line-height: 1.3; }
 
-        /* 기록 화면 스타일 */
         .history-list { text-align: left; max-height: 60vh; overflow-y: auto; margin-bottom: 20px; padding: 0 5px; }
         .history-item { background: #fff; border: 1px solid #eef2f6; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .history-info { display: flex; flex-direction: column; gap: 5px; }
-        .history-date { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; }
-        .history-mode { font-size: 1.05rem; color: var(--text-main); font-weight: 800; }
-        .history-score { font-size: 1.4rem; font-weight: 900; color: var(--primary); }
+
+        /* 게임 스타일: 산성비 */
+        .rain-container { flex-grow: 1; position: relative; background: #eef2f6; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 2px solid #dce4ec; }
+        .falling-word { position: absolute; font-size: 1.2rem; font-weight: bold; color: var(--primary); padding: 5px 10px; background: rgba(255,255,255,0.9); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap; transition: top 0.1s linear; }
+        .rain-stats { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
+        
+        /* 게임 스타일: 타자 */
+        .typing-target { font-size: 1.3rem; font-weight: 800; color: #2c3e50; line-height: 1.6; margin-bottom: 20px; background: #f8f9fa; padding: 20px; border-radius: 15px; border-left: 5px solid #2ecc71; word-break: break-word; }
+        
+        /* 게임 스타일: 카드 짝맞추기 */
+        .match-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; margin-bottom: 20px; }
+        .match-card { background: #eef2f6; border: 2px solid #dce4ec; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1rem; font-weight: bold; color: transparent; cursor: pointer; transition: all 0.3s; min-height: 80px; text-align: center; padding: 5px; word-break: break-word; position: relative; }
+        .match-card.flipped { background: white; color: var(--primary); border-color: var(--primary); transform: rotateY(0deg); }
+        .match-card.matched { background: var(--success); color: white; border-color: #27ae60; cursor: default; visibility: hidden; opacity: 0; transition: visibility 0s 0.3s, opacity 0.3s linear; }
+
+        .game-top-bar { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; padding: 10px 15px; background: var(--primary-light); border-radius: 12px; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -91,7 +103,6 @@
 <!-- 초기 화면 -->
 <div class="container" id="main-screen" style="justify-content: center; background: linear-gradient(145deg, #ffffff 0%, #f0f4f8 100%);">
     <div class="fade-in-up">
-        <!-- 💡 로고 컨테이너 수정: overflow: hidden 추가 및 이미지 크기를 100%로 꽉 채움 -->
         <div style="background: white; width: 110px; height: 110px; border-radius: 26px; display: flex; justify-content: center; align-items: center; margin: 0 auto 25px; box-shadow: 0 12px 30px rgba(0,71,160,0.12); overflow: hidden;">
             <img src="logo.png" alt="KMH" style="width: 100%; height: 100%; object-fit: contain;">
         </div>
@@ -111,10 +122,9 @@
 
 <!-- 모드 선택 화면 -->
 <div class="container" id="mode-screen">
-    <div style="font-size: 1.3rem; font-weight: 800; color: #222; margin-bottom: 15px; text-align: left; display: flex; justify-content: space-between; align-items: center;">
-        <span>학습 모드 선택</span>
-    </div>
-    <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;">
+    <div style="font-size: 1.3rem; font-weight: 800; color: #222; margin-bottom: 15px; text-align: left;">학습 모드 선택</div>
+    <div style="display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto;">
+        
         <div class="mode-section">
             <div class="section-header">학습하기</div>
             <button class="menu-card" onclick="startLearningMode()">
@@ -130,6 +140,7 @@
                 <div class="menu-text"><div class="menu-title">단어 연속 듣기</div><div class="menu-desc">자동 반복 재생</div></div>
             </button>
         </div>
+
         <div class="mode-section">
             <div class="section-header">평가하기</div>
             <button class="menu-card" onclick="startGame('multiple')">
@@ -145,6 +156,23 @@
                 <div class="menu-text"><div class="menu-title">통합 문제</div><div class="menu-desc">객관식/주관식 무작위 출제</div></div>
             </button>
         </div>
+
+        <!-- 💡 새로 추가된 미니 게임 섹션 -->
+        <div class="mode-section">
+            <div class="section-header" style="color: #d35400;">🎮 미니 게임 (랭킹 도전!)</div>
+            <button class="menu-card" onclick="startRainGame()">
+                <div class="menu-icon" style="background: #fff3cd; color: #d35400;">🌧️</div>
+                <div class="menu-text"><div class="menu-title">단어 비 내리기</div><div class="menu-desc">떨어지는 단어를 타이핑해 방어!</div></div>
+            </button>
+            <button class="menu-card" onclick="startTypingGame()">
+                <div class="menu-icon" style="background: #fff3cd; color: #d35400;">⌨️</div>
+                <div class="menu-text"><div class="menu-title">스피드 문장 타자</div><div class="menu-desc">60초 안에 예문 빠르게 치기</div></div>
+            </button>
+            <button class="menu-card" onclick="startMatchGame()">
+                <div class="menu-icon" style="background: #fff3cd; color: #d35400;">🃏</div>
+                <div class="menu-text"><div class="menu-title">단어 짝맞추기</div><div class="menu-desc">영어와 한글 뜻 기억력 게임</div></div>
+            </button>
+        </div>
         
         <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
             <button class="app-btn btn-history" onclick="showHistoryScreen()">📊 내 학습 기록 보기</button>
@@ -156,9 +184,7 @@
 <!-- 내 학습 기록 화면 -->
 <div class="container" id="history-screen">
     <div style="font-size: 1.5rem; font-weight: 800; color: #222; margin-bottom: 25px; text-align: left;">내 학습 기록</div>
-    <div class="history-list" id="history-list-container">
-        <!-- 기록이 여기에 동적으로 추가됩니다 -->
-    </div>
+    <div class="history-list" id="history-list-container"></div>
     <div style="margin-top: auto;">
         <button class="app-btn btn-primary" onclick="closeHistoryScreen()">메뉴로 돌아가기</button>
         <button class="app-btn btn-subtle" onclick="clearHistory()" style="margin-top: 10px;">기록 초기화</button>
@@ -201,7 +227,7 @@
     </div>
 </div>
 
-<!-- 게임 화면 (객/주/문장완성 공통) -->
+<!-- 평가 게임 화면 (객/주/문장완성 공통) -->
 <div class="container" id="game-screen">
     <div class="top-section">
         <div class="progress-bar"><div id="progress-fill"></div></div>
@@ -220,16 +246,72 @@
     </div>
 </div>
 
-<!-- 성적 화면 -->
+<!-- 성적 화면 (평가용) -->
 <div class="container" id="score-screen">
     <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
         <div style="font-size: 1.5rem; font-weight: 800; color: #222; margin-bottom: 20px;"><span id="display-name" style="color:var(--primary);"></span> 학생의 리포트</div>
-        <div class="result-card"><div style="font-size: 1.1rem; color: var(--text-sub); font-weight: bold; margin-bottom: 15px;">최종 평가 점수</div><div style="display: flex; justify-content: center; align-items: baseline; gap: 5px; margin-bottom: 20px;"><span id="final-correct" class="score-current">0</span><span style="font-size: 2rem; color: #bdc3c7;">/</span><span id="final-total" style="font-size: 2rem; color: var(--text-sub); font-weight: 700;">30</span></div></div>
+        <div style="background: white; border: 2px solid #eef2f6; border-radius: 20px; padding: 30px; margin-bottom:20px;">
+            <div style="font-size: 1.1rem; color: var(--text-sub); font-weight: bold; margin-bottom: 15px;">최종 평가 점수</div>
+            <div style="display: flex; justify-content: center; align-items: baseline; gap: 5px;"><span id="final-correct" style="font-size: 3rem; font-weight: 900; color: var(--primary);">0</span><span style="font-size: 2rem; color: #bdc3c7;">/</span><span id="final-total" style="font-size: 2rem; color: var(--text-sub); font-weight: 700;">30</span></div>
+        </div>
         <button id="send-btn" class="app-btn btn-primary" onclick="sendResult()">결과 제출하기</button>
-        
         <button class="app-btn btn-subtle" onclick="returnToMenuFromScore()">학습 메뉴로 돌아가기</button>
-        
         <p id="send-status" style="margin-top:15px; font-weight:bold; color:var(--primary);"></p>
+    </div>
+</div>
+
+<!-- 🎮 미니 게임 1: 단어 비 내리기 -->
+<div class="container" id="minigame-rain">
+    <div class="game-top-bar">
+        <span>점수: <span id="rain-score">0</span></span>
+        <span style="color:var(--danger)">생명력: <span id="rain-life">5</span></span>
+    </div>
+    <div class="rain-container" id="rain-container"></div>
+    <div>
+        <input type="text" id="rain-input" placeholder="떨어지는 단어를 입력하세요!" autocomplete="off" onkeypress="if(event.key === 'Enter') checkRainWord()">
+        <button class="app-btn btn-subtle" onclick="quitMinigame()">그만하기</button>
+    </div>
+</div>
+
+<!-- 🎮 미니 게임 2: 스피드 타자 -->
+<div class="container" id="minigame-typing">
+    <div class="game-top-bar">
+        <span>점수: <span id="type-score">0</span></span>
+        <span style="color:var(--danger)">남은 시간: <span id="type-time">60</span>초</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+        <div style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 5px;">다음 문장을 똑같이 타이핑하세요 (대소문자, 기호 포함)</div>
+        <div class="typing-target" id="type-target-text"></div>
+        <input type="text" id="type-input" placeholder="여기에 타이핑하세요" autocomplete="off" oninput="checkTypingMatch()">
+    </div>
+    <button class="app-btn btn-subtle" onclick="quitMinigame()">그만하기</button>
+</div>
+
+<!-- 🎮 미니 게임 3: 카드 짝맞추기 -->
+<div class="container" id="minigame-match">
+    <div class="game-top-bar">
+        <span>찾은 쌍: <span id="match-score">0</span>/6</span>
+        <span style="color:var(--primary)">소요 시간: <span id="match-time">0</span>초</span>
+    </div>
+    <div class="match-grid" id="match-container"></div>
+    <button class="app-btn btn-subtle" onclick="quitMinigame()">그만하기</button>
+</div>
+
+<!-- 🎮 미니 게임 결과 화면 -->
+<div class="container" id="game-result-screen">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+        <div style="font-size: 2rem; font-weight: 900; color: #d35400; margin-bottom: 10px;">GAME OVER</div>
+        <div style="font-size: 1.2rem; font-weight: bold; color: var(--text-main); margin-bottom: 20px;" id="result-game-title">게임 이름</div>
+        
+        <div style="background: white; border: 2px solid #eef2f6; border-radius: 20px; padding: 30px; margin-bottom:20px;">
+            <div style="font-size: 1rem; color: var(--text-sub); font-weight: bold; margin-bottom: 5px;">내 최종 기록</div>
+            <div style="font-size: 3.5rem; font-weight: 900; color: var(--primary); line-height: 1;" id="result-score">0</div>
+            <div style="font-size: 1rem; color: var(--text-sub); margin-top: 5px; font-weight: bold;">최고 기록: <span id="result-highscore" style="color: #d35400;">0</span></div>
+        </div>
+        
+        <button class="app-btn btn-share" onclick="shareScore()">🚀 카카오톡/문자로 내 점수 자랑하기</button>
+        <button class="app-btn btn-primary" onclick="restartCurrentMinigame()">다시 도전하기</button>
+        <button class="app-btn btn-subtle" onclick="returnToMenuFromScore()">메뉴로 돌아가기</button>
     </div>
 </div>
 
@@ -348,40 +430,36 @@
     }
 
     // --- 화면 이동 및 제어 ---
+    function hideAllScreens() {
+        ['main-screen', 'mode-screen', 'history-screen', 'learning-screen', 'continuous-screen', 'game-screen', 'score-screen', 'minigame-rain', 'minigame-typing', 'minigame-match', 'game-result-screen'].forEach(id => document.getElementById(id).style.display = 'none');
+    }
+
     function goToModeSelection() {
         userName = document.getElementById('user-name').value.trim();
         if(!userName) { alert("이름을 입력해 주세요!"); return; }
-        document.getElementById('main-screen').style.display = 'none';
+        hideAllScreens();
         document.getElementById('mode-screen').style.display = 'flex';
     }
     
-    // 이름 입력 화면으로 돌아가기
-    function returnToMainScreen() { 
-        document.getElementById('mode-screen').style.display = 'none'; 
-        document.getElementById('main-screen').style.display = 'flex'; 
-    }
+    function returnToMainScreen() { hideAllScreens(); document.getElementById('main-screen').style.display = 'flex'; }
     
-    // 평가 종료 후 메뉴 화면으로 돌아가기 (이름 유지)
     function returnToMenuFromScore() {
-        document.getElementById('score-screen').style.display = 'none';
-        document.getElementById('mode-screen').style.display = 'flex';
-        // 제출 버튼 상태 초기화
+        hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex';
         const btn = document.getElementById('send-btn');
-        btn.disabled = false;
-        btn.innerText = "결과 제출하기";
-        btn.style.display = 'block';
-        document.getElementById('send-status').innerText = "";
+        if(btn) { btn.disabled = false; btn.innerText = "결과 제출하기"; btn.style.display = 'block'; }
+        const status = document.getElementById('send-status');
+        if(status) status.innerText = "";
     }
 
     function confirmReturnToMenu() {
         if(confirm("학습 메뉴로 돌아갈까요?")) {
             window.speechSynthesis.cancel();
-            document.getElementById('game-screen').style.display = 'none';
+            hideAllScreens();
             document.getElementById('mode-screen').style.display = 'flex';
         }
     }
 
-    // --- 💡 학습 기록 관리 로직 ---
+    // --- 학습 기록 관리 로직 ---
     function saveLearningHistory(mode, finalScore, maxScore) {
         let history = JSON.parse(localStorage.getItem('vocaHistory')) || [];
         const now = new Date();
@@ -398,44 +476,23 @@
     }
 
     function showHistoryScreen() {
-        document.getElementById('mode-screen').style.display = 'none';
-        document.getElementById('history-screen').style.display = 'flex';
-        
+        hideAllScreens(); document.getElementById('history-screen').style.display = 'flex';
         const container = document.getElementById('history-list-container');
         let history = JSON.parse(localStorage.getItem('vocaHistory')) || [];
-        
         container.innerHTML = '';
         if(history.length === 0) {
             container.innerHTML = '<div style="padding:30px; text-align:center; color:#7f8c8d; font-weight:bold;">학습 기록이 없습니다. 평가에 도전해보세요!</div>';
         } else {
             history.forEach(item => {
-                container.innerHTML += `
-                    <div class="history-item">
-                        <div class="history-info">
-                            <span class="history-date">${item.date}</span>
-                            <span class="history-mode">${item.mode}</span>
-                        </div>
-                        <div class="history-score">${item.score} <span style="font-size:1rem; color:#bdc3c7;">/ ${item.total}</span></div>
-                    </div>
-                `;
+                container.innerHTML += `<div class="history-item"><div class="history-info"><span class="history-date">${item.date}</span><span class="history-mode">${item.mode}</span></div><div class="history-score">${item.score} <span style="font-size:1rem; color:#bdc3c7;">/ ${item.total}</span></div></div>`;
             });
         }
     }
+    function closeHistoryScreen() { hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex'; }
+    function clearHistory() { if(confirm("모든 학습 기록을 삭제하시겠습니까? (복구할 수 없습니다)")) { localStorage.removeItem('vocaHistory'); showHistoryScreen(); } }
 
-    function closeHistoryScreen() {
-        document.getElementById('history-screen').style.display = 'none';
-        document.getElementById('mode-screen').style.display = 'flex';
-    }
-
-    function clearHistory() {
-        if(confirm("모든 학습 기록을 삭제하시겠습니까? (복구할 수 없습니다)")) {
-            localStorage.removeItem('vocaHistory');
-            showHistoryScreen();
-        }
-    }
-
-    // --- 모드 1: 단어 익히기 ---
-    function startLearningMode() { document.getElementById('mode-screen').style.display = 'none'; document.getElementById('learning-screen').style.display = 'flex'; learnCurrentIdx = 0; showLearningWord(); }
+    // --- 기본 학습/평가 기능 --- (생략 없이 이전 기능 그대로 유지)
+    function startLearningMode() { hideAllScreens(); document.getElementById('learning-screen').style.display = 'flex'; learnCurrentIdx = 0; showLearningWord(); }
     function showLearningWord() {
         window.speechSynthesis.cancel(); clearTimeout(learningTimeout1); clearTimeout(learningTimeout2); clearTimeout(learningTimeout3);
         const item = vocabData[learnCurrentIdx];
@@ -454,10 +511,7 @@
                     learningTimeout2 = setTimeout(() => {
                         document.getElementById('learn-eng-display').innerHTML = item.sent.replace("[?]", `<span style="color:var(--primary); font-weight:bold;">${item.word}</span>`); document.getElementById('learn-eng-display').style.opacity = '1';
                         speakText(item.sent.replace("[?]", item.word), 'en-US', 1.0, () => {
-                            learningTimeout3 = setTimeout(() => { 
-                                document.getElementById('learn-ko-sent-display').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, ""); 
-                                document.getElementById('learn-ko-sent-display').style.opacity = '1'; 
-                            }, 400);
+                            learningTimeout3 = setTimeout(() => { document.getElementById('learn-ko-sent-display').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, ""); document.getElementById('learn-ko-sent-display').style.opacity = '1'; }, 400);
                         });
                     }, 600);
                 });
@@ -466,197 +520,263 @@
     }
     function nextLearnWord() { if(learnCurrentIdx < vocabData.length - 1) { learnCurrentIdx++; showLearningWord(); } }
     function prevLearnWord() { if(learnCurrentIdx > 0) { learnCurrentIdx--; showLearningWord(); } }
-    function exitLearningMode() { window.speechSynthesis.cancel(); document.getElementById('learning-screen').style.display = 'none'; document.getElementById('mode-screen').style.display = 'flex'; }
+    function exitLearningMode() { window.speechSynthesis.cancel(); hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex'; }
 
-    // --- 모드 2: 연속 듣기 ---
-    function startContinuousMode() { document.getElementById('mode-screen').style.display = 'none'; document.getElementById('continuous-screen').style.display = 'flex'; contCurrentIdx = 0; isContPlaying = true; playContinuousSequence(); }
+    function startContinuousMode() { hideAllScreens(); document.getElementById('continuous-screen').style.display = 'flex'; contCurrentIdx = 0; isContPlaying = true; playContinuousSequence(); }
     function playContinuousSequence() {
         if (!isContPlaying || contCurrentIdx >= vocabData.length) { if(contCurrentIdx >= vocabData.length) exitContinuousMode(); return; }
         const item = vocabData[contCurrentIdx];
         document.getElementById('cont-current-idx').innerText = contCurrentIdx + 1;
         document.getElementById('continuous-progress-fill').style.width = (contCurrentIdx / vocabData.length * 100) + "%";
         document.getElementById('cont-word-display').innerText = item.word; document.getElementById('cont-ko-display').innerText = item.meaning;
-        speakText(item.word, 'en-US', 1.0, () => {
-            contTimeout1 = setTimeout(() => {
-                speakText(item.meaning, 'ko-KR', 1.0, () => { contTimeout2 = setTimeout(() => { contCurrentIdx++; playContinuousSequence(); }, 1200); });
-            }, 800);
-        });
+        speakText(item.word, 'en-US', 1.0, () => { contTimeout1 = setTimeout(() => { speakText(item.meaning, 'ko-KR', 1.0, () => { contTimeout2 = setTimeout(() => { contCurrentIdx++; playContinuousSequence(); }, 1200); }); }, 800); });
     }
     function toggleContinuousPlay() { isContPlaying = !isContPlaying; document.getElementById('cont-pause-btn').innerText = isContPlaying ? "일시정지" : "계속 듣기"; if(isContPlaying) playContinuousSequence(); else window.speechSynthesis.cancel(); }
-    function exitContinuousMode() { isContPlaying = false; window.speechSynthesis.cancel(); document.getElementById('continuous-screen').style.display = 'none'; document.getElementById('mode-screen').style.display = 'flex'; }
+    function exitContinuousMode() { isContPlaying = false; window.speechSynthesis.cancel(); hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex'; }
 
-    // --- 게임 모드 (객관식, 주관식, 문장 완성 혼합) ---
     function startGame(mode) {
         selectedBaseMode = mode; score = 0; currentIdx = 0; wrongQuestions = [];
         quizSet = vocabData.sort(() => Math.random() - 0.5).slice(0, MAX_QUESTIONS).map(item => ({...item, qMode: mode === 'mixed' ? (Math.random() > 0.5 ? 'multiple' : 'subjective') : mode}));
-        document.getElementById('mode-screen').style.display = 'none'; 
-        document.getElementById('game-screen').style.display = 'flex'; 
+        hideAllScreens(); document.getElementById('game-screen').style.display = 'flex'; 
         document.getElementById('total-idx').innerText = quizSet.length;
         showQuestion();
     }
-
     function showQuestion() {
         if(currentIdx >= quizSet.length) { showScore(); return; }
         const item = quizSet[currentIdx];
         document.getElementById('current-idx').innerText = currentIdx + 1;
         document.getElementById('progress-fill').style.width = (currentIdx / quizSet.length * 100) + "%";
-        
-        if (item.qMode === 'subjective') {
-            document.getElementById('target-translation').innerHTML = item.ko;
-        } else {
-            document.getElementById('target-translation').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, "");
-        }
-        
-        document.getElementById('next-btn').style.display = 'none'; 
-        document.getElementById('skip-btn').style.display = 'block';
-        document.getElementById('check-btn').style.display = 'none'; 
+        if (item.qMode === 'subjective') document.getElementById('target-translation').innerHTML = item.ko; else document.getElementById('target-translation').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, "");
+        document.getElementById('next-btn').style.display = 'none'; document.getElementById('skip-btn').style.display = 'block'; document.getElementById('check-btn').style.display = 'none'; 
 
         if (item.qMode === 'multiple') {
-            document.getElementById('mode-indicator').innerText = "객관식";
-            document.getElementById('subjective-area').style.display = 'none';
-            document.getElementById('options-container').style.display = 'grid';
-            document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", "________");
-            
-            let choices = [item.word]; 
-            while(choices.length < 4) { let r = vocabData[Math.floor(Math.random()*vocabData.length)].word; if(!choices.includes(r)) choices.push(r); }
+            document.getElementById('mode-indicator').innerText = "객관식"; document.getElementById('subjective-area').style.display = 'none'; document.getElementById('options-container').style.display = 'grid'; document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", "________");
+            let choices = [item.word]; while(choices.length < 4) { let r = vocabData[Math.floor(Math.random()*vocabData.length)].word; if(!choices.includes(r)) choices.push(r); }
             document.getElementById('options-container').innerHTML = '';
             choices.sort(() => Math.random() - 0.5).forEach(c => {
                 const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.innerText = c;
                 btn.onclick = () => {
                     document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'none');
-                    if(c === item.word) { score++; btn.classList.add('correct'); } 
-                    else { btn.classList.add('wrong'); if(!wrongQuestions.includes(item)) wrongQuestions.push(item); document.querySelectorAll('.opt-btn').forEach(b => { if(b.innerText === item.word) b.classList.add('correct'); }); }
+                    if(c === item.word) { score++; btn.classList.add('correct'); } else { btn.classList.add('wrong'); if(!wrongQuestions.includes(item)) wrongQuestions.push(item); document.querySelectorAll('.opt-btn').forEach(b => { if(b.innerText === item.word) b.classList.add('correct'); }); }
                     document.getElementById('next-btn').style.display = 'block'; document.getElementById('skip-btn').style.display = 'none';
                 }; document.getElementById('options-container').appendChild(btn);
             });
-        } 
-        else if (item.qMode === 'subjective') {
-            document.getElementById('mode-indicator').innerText = "주관식";
-            document.getElementById('subjective-area').style.display = 'block';
-            document.getElementById('options-container').style.display = 'none';
+        } else if (item.qMode === 'subjective') {
+            document.getElementById('mode-indicator').innerText = "주관식"; document.getElementById('subjective-area').style.display = 'block'; document.getElementById('options-container').style.display = 'none';
             document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span class="highlight">${item.word[0]}${"_".repeat(item.word.length-1)}</span>`);
-            const input = document.getElementById('answer-input'); 
-            input.value = ''; input.disabled = false; input.style.backgroundColor = ""; input.focus();
-            document.getElementById('check-btn').style.display = 'block';
-        } 
-        else if (item.qMode === 'composition') {
-            document.getElementById('mode-indicator').innerText = "문장 완성";
-            document.getElementById('subjective-area').style.display = 'none';
-            document.getElementById('options-container').style.display = 'grid';
-            
-            const fullSent = item.sent.replace("[?]", item.word);
-            const cleanSent = fullSent.replace(/[.,!?;]/g, ""); 
-            window.compWords = cleanSent.split(/\s+/).filter(w => w.length > 0);
-            window.compIdx = 0;
-            window.isCurrentWrong = false;
-            updateComp();
+            const input = document.getElementById('answer-input'); input.value = ''; input.disabled = false; input.style.backgroundColor = ""; input.focus(); document.getElementById('check-btn').style.display = 'block';
+        } else if (item.qMode === 'composition') {
+            document.getElementById('mode-indicator').innerText = "문장 완성"; document.getElementById('subjective-area').style.display = 'none'; document.getElementById('options-container').style.display = 'grid';
+            const fullSent = item.sent.replace("[?]", item.word); const cleanSent = fullSent.replace(/[.,!?;]/g, ""); window.compWords = cleanSent.split(/\s+/).filter(w => w.length > 0); window.compIdx = 0; window.isCurrentWrong = false; updateComp();
         }
     }
-
     function handleCheck() {
         const item = quizSet[currentIdx], input = document.getElementById('answer-input');
-        
-        if (input.value.trim() === "") {
-            alert("정답을 입력해 주세요!");
-            input.focus();
-            return;
-        }
-
-        input.disabled = true; 
-        document.getElementById('check-btn').style.display = 'none'; 
-        document.getElementById('skip-btn').style.display = 'none';
-        
-        if(input.value.trim().toLowerCase() === item.word.toLowerCase()) { 
-            score++; input.style.backgroundColor = '#d4edda'; 
-            document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--success); font-weight:bold;">${item.word}</span>`);
-        } else { 
-            input.style.backgroundColor = '#f8d7da'; 
-            if(!wrongQuestions.includes(item)) wrongQuestions.push(item); 
-            document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`);
-        }
+        if (input.value.trim() === "") { alert("정답을 입력해 주세요!"); input.focus(); return; }
+        input.disabled = true; document.getElementById('check-btn').style.display = 'none'; document.getElementById('skip-btn').style.display = 'none';
+        if(input.value.trim().toLowerCase() === item.word.toLowerCase()) { score++; input.style.backgroundColor = '#d4edda'; document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--success); font-weight:bold;">${item.word}</span>`); } 
+        else { input.style.backgroundColor = '#f8d7da'; if(!wrongQuestions.includes(item)) wrongQuestions.push(item); document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`); }
         document.getElementById('next-btn').style.display = 'block';
     }
-
     function updateComp() {
-        const full = window.compWords;
-        const container = document.getElementById('options-container');
-        
-        document.getElementById('target-sentence').innerHTML = full.map((w, i) => 
-            i < window.compIdx ? `<span style="color:var(--primary); font-weight:bold;">${w}</span>` : `<span style="color:#bdc3c7;">_</span>`
-        ).join(" ");
-        
+        const full = window.compWords, container = document.getElementById('options-container');
+        document.getElementById('target-sentence').innerHTML = full.map((w, i) => i < window.compIdx ? `<span style="color:var(--primary); font-weight:bold;">${w}</span>` : `<span style="color:#bdc3c7;">_</span>`).join(" ");
         if(window.compIdx >= full.length) {
-            container.innerHTML = '';
-            if(!window.isCurrentWrong) score++; 
-            else if(!wrongQuestions.includes(quizSet[currentIdx])) wrongQuestions.push(quizSet[currentIdx]);
-            
-            const originalSent = quizSet[currentIdx].sent.replace("[?]", quizSet[currentIdx].word);
-            document.getElementById('target-sentence').innerHTML = `<span style="color:var(--success); font-weight:bold;">${originalSent}</span>`;
-            
-            document.getElementById('next-btn').style.display = 'block';
-            document.getElementById('skip-btn').style.display = 'none';
-            return;
+            container.innerHTML = ''; if(!window.isCurrentWrong) score++; else if(!wrongQuestions.includes(quizSet[currentIdx])) wrongQuestions.push(quizSet[currentIdx]);
+            document.getElementById('target-sentence').innerHTML = `<span style="color:var(--success); font-weight:bold;">${quizSet[currentIdx].sent.replace("[?]", quizSet[currentIdx].word)}</span>`;
+            document.getElementById('next-btn').style.display = 'block'; document.getElementById('skip-btn').style.display = 'none'; return;
         }
-
-        const correctWord = full[window.compIdx];
-        const remaining = full.slice(window.compIdx);
-        let uniqueRemaining = [...new Set(remaining)]; 
-        
-        let otherWords = uniqueRemaining.filter(w => w !== correctWord).sort(() => Math.random() - 0.5).slice(0, 3);
-        let choices = [correctWord, ...otherWords].sort(() => Math.random() - 0.5);
-
+        const correctWord = full[window.compIdx]; let uniqueRemaining = [...new Set(full.slice(window.compIdx))]; 
+        let otherWords = uniqueRemaining.filter(w => w !== correctWord).sort(() => Math.random() - 0.5).slice(0, 3); let choices = [correctWord, ...otherWords].sort(() => Math.random() - 0.5);
         container.innerHTML = '';
         choices.forEach(c => {
-            const btn = document.createElement('button');
-            btn.className = 'opt-btn';
-            btn.innerText = c;
-            btn.onclick = () => {
-                if(c === correctWord) {
-                    window.compIdx++;
-                    updateComp();
-                } else {
-                    window.isCurrentWrong = true;
-                    btn.classList.add('wrong');
-                    setTimeout(() => btn.classList.remove('wrong'), 400);
-                }
-            };
+            const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.innerText = c;
+            btn.onclick = () => { if(c === correctWord) { window.compIdx++; updateComp(); } else { window.isCurrentWrong = true; btn.classList.add('wrong'); setTimeout(() => btn.classList.remove('wrong'), 400); } };
             container.appendChild(btn);
         });
     }
-
     function skipQuestion() {
-        const item = quizSet[currentIdx];
-        if(!wrongQuestions.includes(item)) wrongQuestions.push(item);
-        
-        if(item.qMode === 'composition') {
-            document.getElementById('target-sentence').innerHTML = `<span style="color:var(--danger); font-weight:bold;">${item.sent.replace("[?]", item.word)}</span>`;
-            document.getElementById('options-container').innerHTML = '';
-        } else if(item.qMode === 'multiple') {
-            document.querySelectorAll('.opt-btn').forEach(btn => { btn.style.pointerEvents = 'none'; if(btn.innerText === item.word) btn.classList.add('correct'); });
-            document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`);
-        } else {
-            const input = document.getElementById('answer-input'); 
-            input.value = item.word; input.disabled = true; input.style.backgroundColor = "#f8d7da"; 
-            document.getElementById('check-btn').style.display = 'none';
-            document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`);
-        }
-        document.getElementById('skip-btn').style.display = 'none';
-        document.getElementById('next-btn').style.display = 'block';
+        const item = quizSet[currentIdx]; if(!wrongQuestions.includes(item)) wrongQuestions.push(item);
+        if(item.qMode === 'composition') { document.getElementById('target-sentence').innerHTML = `<span style="color:var(--danger); font-weight:bold;">${item.sent.replace("[?]", item.word)}</span>`; document.getElementById('options-container').innerHTML = ''; } 
+        else if(item.qMode === 'multiple') { document.querySelectorAll('.opt-btn').forEach(btn => { btn.style.pointerEvents = 'none'; if(btn.innerText === item.word) btn.classList.add('correct'); }); document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`); } 
+        else { const input = document.getElementById('answer-input'); input.value = item.word; input.disabled = true; input.style.backgroundColor = "#f8d7da"; document.getElementById('check-btn').style.display = 'none'; document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`); }
+        document.getElementById('skip-btn').style.display = 'none'; document.getElementById('next-btn').style.display = 'block';
     }
-
     function nextQuestion() { currentIdx++; showQuestion(); }
-
     function showScore() {
         saveLearningHistory(selectedBaseMode, score, quizSet.length);
-        
-        document.getElementById('game-screen').style.display = 'none'; document.getElementById('score-screen').style.display = 'flex';
+        hideAllScreens(); document.getElementById('score-screen').style.display = 'flex';
         document.getElementById('display-name').innerText = userName; document.getElementById('final-correct').innerText = score; document.getElementById('final-total').innerText = quizSet.length;
     }
-
     function sendResult() {
         const btn = document.getElementById('send-btn'); btn.disabled = true; btn.innerText = "전송 중...";
         fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: userName, score: `${score}/${MAX_QUESTIONS}`, mode: selectedBaseMode }) })
         .then(() => { btn.style.display = 'none'; document.getElementById('send-status').innerText = "결과가 선생님께 제출되었습니다."; });
+    }
+
+    // ==========================================
+    // 🎮 미니 게임 로직 시작
+    // ==========================================
+    let currentMinigame = "";
+    let minigameScore = 0;
+    
+    function quitMinigame() {
+        if(confirm("게임을 중단하시겠습니까?")) {
+            clearAllGameTimers();
+            hideAllScreens();
+            document.getElementById('mode-screen').style.display = 'flex';
+        }
+    }
+    
+    function showMinigameResult(gameId, gameTitle, score, suffix="점") {
+        clearAllGameTimers();
+        hideAllScreens();
+        
+        let highscore = localStorage.getItem(`high_${gameId}`) || 0;
+        if(score > highscore) { highscore = score; localStorage.setItem(`high_${gameId}`, highscore); }
+        
+        document.getElementById('game-result-screen').style.display = 'flex';
+        document.getElementById('result-game-title').innerText = gameTitle;
+        document.getElementById('result-score').innerText = score + suffix;
+        document.getElementById('result-highscore').innerText = highscore + suffix;
+        currentMinigame = gameId;
+        minigameScore = score + suffix;
+    }
+    
+    function restartCurrentMinigame() {
+        if(currentMinigame === "rain") startRainGame();
+        else if(currentMinigame === "typing") startTypingGame();
+        else if(currentMinigame === "match") startMatchGame();
+    }
+    
+    // 🔗 점수 공유하기 (Web Share API)
+    function shareScore() {
+        const gameTitles = { rain: "단어 비 내리기", typing: "스피드 문장 타자", match: "단어 짝맞추기" };
+        const shareText = `🔥 VOCA Master 랭킹 도전!\n${userName} 학생이 [${gameTitles[currentMinigame]}] 게임에서 ${minigameScore}을 기록했습니다!\n\n과연 이 기록을 깰 수 있을까요? 🏆`;
+        if (navigator.share) {
+            navigator.share({ title: 'VOCA Master 게임 기록', text: shareText, url: window.location.href }).catch(console.error);
+        } else {
+            alert("공유 기능이 지원되지 않는 브라우저입니다. 텍스트를 복사해서 공유해주세요!\n\n" + shareText);
+        }
+    }
+
+    let gameIntervals = [];
+    function clearAllGameTimers() { gameIntervals.forEach(clearInterval); gameIntervals = []; }
+
+    // 🌧️ 1. 단어 비 내리기 (산성비)
+    let rainWords = [], rainLife = 5;
+    function startRainGame() {
+        hideAllScreens(); document.getElementById('minigame-rain').style.display = 'flex';
+        document.getElementById('rain-container').innerHTML = '';
+        minigameScore = 0; rainLife = 5; updateRainStats();
+        document.getElementById('rain-input').value = '';
+        document.getElementById('rain-input').focus();
+        rainWords = []; clearAllGameTimers();
+        
+        let spawnRate = 2000;
+        let speed = 1;
+        
+        gameIntervals.push(setInterval(() => {
+            if(rainLife <= 0) return;
+            const wordData = vocabData[Math.floor(Math.random() * vocabData.length)];
+            const span = document.createElement('span');
+            span.className = 'falling-word';
+            span.innerText = wordData.word;
+            span.style.left = Math.random() * 80 + "%";
+            span.style.top = "-30px";
+            document.getElementById('rain-container').appendChild(span);
+            rainWords.push({ el: span, text: wordData.word, top: -30 });
+            
+            if(minigameScore > 0 && minigameScore % 50 === 0) speed += 0.2; // 점수마다 속도 증가
+        }, spawnRate));
+        
+        gameIntervals.push(setInterval(() => {
+            const containerHeight = document.getElementById('rain-container').offsetHeight;
+            for(let i = rainWords.length - 1; i >= 0; i--) {
+                let w = rainWords[i];
+                w.top += speed;
+                w.el.style.top = w.top + "px";
+                if(w.top > containerHeight - 30) {
+                    w.el.remove(); rainWords.splice(i, 1);
+                    rainLife--; updateRainStats();
+                    if(rainLife <= 0) showMinigameResult("rain", "🌧️ 단어 비 내리기", minigameScore);
+                }
+            }
+        }, 50));
+    }
+    function checkRainWord() {
+        const input = document.getElementById('rain-input');
+        const val = input.value.trim().toLowerCase();
+        let matched = false;
+        for(let i = 0; i < rainWords.length; i++) {
+            if(rainWords[i].text.toLowerCase() === val) {
+                rainWords[i].el.remove(); rainWords.splice(i, 1);
+                minigameScore += 10; updateRainStats(); matched = true; break;
+            }
+        }
+        if(matched) input.value = '';
+    }
+    function updateRainStats() { document.getElementById('rain-score').innerText = minigameScore; document.getElementById('rain-life').innerText = rainLife; }
+
+    // ⌨️ 2. 스피드 문장 타자
+    let typeTime = 60, currentTypeTarget = "";
+    function startTypingGame() {
+        hideAllScreens(); document.getElementById('minigame-typing').style.display = 'flex';
+        minigameScore = 0; typeTime = 60; clearAllGameTimers();
+        document.getElementById('type-score').innerText = minigameScore;
+        document.getElementById('type-time').innerText = typeTime;
+        document.getElementById('type-input').value = '';
+        nextTypingSentence();
+        document.getElementById('type-input').focus();
+        
+        gameIntervals.push(setInterval(() => {
+            typeTime--; document.getElementById('type-time').innerText = typeTime;
+            if(typeTime <= 0) showMinigameResult("typing", "⌨️ 스피드 문장 타자", minigameScore);
+        }, 1000));
+    }
+    function nextTypingSentence() {
+        const item = vocabData[Math.floor(Math.random() * vocabData.length)];
+        currentTypeTarget = item.sent.replace("[?]", item.word);
+        document.getElementById('type-target-text').innerText = currentTypeTarget;
+        document.getElementById('type-input').value = '';
+    }
+    function checkTypingMatch() {
+        const val = document.getElementById('type-input').value;
+        if(val === currentTypeTarget) { minigameScore += 20; document.getElementById('type-score').innerText = minigameScore; nextTypingSentence(); }
+    }
+
+    // 🃏 3. 단어 짝맞추기
+    let matchCards = [], firstMatch = null, matchPairsFound = 0, matchTime = 0;
+    function startMatchGame() {
+        hideAllScreens(); document.getElementById('minigame-match').style.display = 'flex';
+        minigameScore = 0; matchPairsFound = 0; matchTime = 0; firstMatch = null; clearAllGameTimers();
+        document.getElementById('match-score').innerText = matchPairsFound; document.getElementById('match-time').innerText = matchTime;
+        
+        let selected = vocabData.sort(() => Math.random() - 0.5).slice(0, 6);
+        let deck = [];
+        selected.forEach((item, idx) => { deck.push({ type: 'en', text: item.word, id: idx }); deck.push({ type: 'ko', text: item.meaning, id: idx }); });
+        deck.sort(() => Math.random() - 0.5);
+        
+        const container = document.getElementById('match-container'); container.innerHTML = '';
+        deck.forEach((card, idx) => {
+            const btn = document.createElement('div'); btn.className = 'match-card'; btn.innerText = card.text;
+            btn.onclick = () => flipMatchCard(btn, card);
+            container.appendChild(btn);
+        });
+        
+        gameIntervals.push(setInterval(() => { matchTime++; document.getElementById('match-time').innerText = matchTime; }, 1000));
+    }
+    function flipMatchCard(btn, cardData) {
+        if(btn.classList.contains('flipped') || btn.classList.contains('matched') || document.querySelectorAll('.match-card.flipped:not(.matched)').length >= 2) return;
+        btn.classList.add('flipped');
+        
+        if(!firstMatch) { firstMatch = { btn: btn, data: cardData }; return; }
+        
+        if(firstMatch.data.id === cardData.id) {
+            setTimeout(() => { btn.classList.add('matched'); firstMatch.btn.classList.add('matched'); firstMatch = null; matchPairsFound++; document.getElementById('match-score').innerText = matchPairsFound; if(matchPairsFound >= 6) showMinigameResult("match", "🃏 단어 짝맞추기", matchTime, "초"); }, 400);
+        } else {
+            setTimeout(() => { btn.classList.remove('flipped'); firstMatch.btn.classList.remove('flipped'); firstMatch = null; }, 800);
+        }
     }
 </script>
 </body>
