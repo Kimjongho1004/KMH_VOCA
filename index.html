@@ -44,7 +44,7 @@
         .btn-history { background: #fff3cd; color: #d35400; border: 2px solid #ffe69c; padding: 15px; margin-top: 5px; }
         .btn-share { background: #fee500; color: #3c1e1e; font-weight: 800; border-radius: 16px; }
         
-        #mode-screen, #game-screen, #score-screen, #learning-screen, #continuous-screen, #history-screen, #minigame-match, #game-result-screen { display: none; flex-direction: column; justify-content: center; flex-grow: 1; }
+        #mode-screen, #game-screen, #score-screen, #learning-screen, #continuous-screen, #history-screen, #minigame-rain, #minigame-typing, #minigame-match, #game-result-screen { display: none; flex-direction: column; justify-content: center; flex-grow: 1; }
         
         .progress-bar { height: 8px; background: #eef2f6; border-radius: 4px; overflow: hidden; margin-bottom: 15px; }
         #progress-fill, #learning-progress-fill, #continuous-progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s ease-out; }
@@ -93,11 +93,11 @@
 
         /* 🌟 1. 게임 스타일: 산성비 (지그재그 & 보너스 추가) */
         .rain-container { flex-grow: 1; flex-shrink: 1; min-height: 0; position: relative; background: #eef2f6; border-radius: 15px; overflow: hidden; margin-bottom: 10px; border: 3px solid #dce4ec; }
-        .falling-word { position: absolute; font-size: 1.15rem; font-weight: 900; color: white; padding: 6px 14px; background: var(--primary); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; transition: top 0.05s linear, left 0.05s linear, transform 0.2s; border: 2px solid rgba(255,255,255,0.8); }
+        .falling-word { position: absolute; font-size: 1.15rem; font-weight: 900; color: white; padding: 6px 14px; background: var(--primary); border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); white-space: nowrap; transition: top 0.05s linear, left 0.05s linear, transform 0.2s; border: 2px solid rgba(255,255,255,0.8); z-index: 5; }
         
         /* 보너스 단어 스타일 */
-        @keyframes pulseBonus { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .bonus-word { animation: pulseBonus 0.8s infinite; border-width: 3px; font-size: 1.25rem; }
+        @keyframes pulseBonus { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .bonus-word { animation: pulseBonus 1s infinite; border-width: 3px; font-size: 1.25rem; z-index: 6; }
         .bonus-freeze { background: #0984e3; border-color: #74b9ff; }
         .bonus-slow { background: #00b894; border-color: #55efc4; }
         .bonus-life { background: #f39c12; border-color: #f1c40f; }
@@ -393,7 +393,7 @@
         {word: "market", meaning: "시장; 판매하다", sent: "The company plans to [?] the new product overseas.", ko: "그 회사는 신제품을 해외에서 <b><u>판매할</u></b> 계획이다."},
         {word: "retail", meaning: "소매; 소매의", sent: "Online shops are more popular than most [?] stores nowadays.", ko: "요즘 온라인 상점은 대부분의 <b><u>소매</u></b>점보다 더 인기가 있다."},
         {word: "commodity", meaning: "상품, 물품", sent: "Export opportunities are opening up in the agricultural [?] sector.", ko: "농산물 <b><u>상품</u></b> 부문에서 수출 기회가 열리고 있다."},
-        {word: "quote", 견적; 견적을 내다", sent: "The customer requested a price [?] on the merchandise.", ko: "고객은 그 상품에 대한 가격 <b><u>견적</u></b>을 요청했다."},
+        {word: "quote", meaning: "견적; 견적을 내다", sent: "The customer requested a price [?] on the merchandise.", ko: "고객은 그 상품에 대한 가격 <b><u>견적</u></b>을 요청했다."},
         {word: "consignment", meaning: "위탁 판매품, 위탁", sent: "The dealer only sells on [?].", ko: "그 판매업자는 <b><u>위탁 판매</u></b>만 한다."},
         {word: "fragile", meaning: "깨지기 쉬운", sent: "The package contains [?] items.", ko: "그 소포에는 <b><u>깨지기 쉬운</u></b> 물품이 들어 있다."},
         {word: "perishable", meaning: "부패하기 쉬운", sent: "[?] goods should be delivered quickly.", ko: "<b><u>부패하기 쉬운</u></b> 상품은 신속하게 배송되어야 한다."},
@@ -729,7 +729,7 @@
     // 🌧️ 1. 단어 비 내리기 (속도 하향 및 개수 제한)
     // ==========================================
     let rainWords = [], rainLife = 5;
-    let rainSpeedBase = 0.5; // 🔥 기본 낙하 속도 절반으로 감소 (기존 1.0 -> 0.5)
+    let rainSpeedBase = 0.25; // 🔥 기본 낙하 속도를 대폭 하향 (기존 0.5 -> 0.25)
     let rainSpeedMod = 1.0;  
     let rainFreeze = false;  
     
@@ -744,7 +744,7 @@
         
         document.getElementById('rain-container').innerHTML = '<div id="rain-toast" class="rain-toast"></div>';
         minigameScore = 0; rainLife = 5; 
-        rainSpeedBase = 0.5; rainSpeedMod = 1.0; rainFreeze = false;
+        rainSpeedBase = 0.25; rainSpeedMod = 1.0; rainFreeze = false;
         updateRainStats();
         
         const inputField = document.getElementById('rain-input');
@@ -759,13 +759,13 @@
     
     function startRainLoop() {
         rainWords = []; clearAllGameTimers();
-        let spawnRate = 1500; // 새로운 단어가 나오는 간격
+        let spawnRate = 2500; // 🔥 단어가 생성되는 주기 연장 (여유 확보)
         
         // 단어 스폰 타이머
         gameIntervals.push(setInterval(() => {
             if(rainLife <= 0 || rainFreeze) return;
             
-            // 🔥 [핵심 추가] 화면에 활성화된 단어가 3개 이상이면 더 이상 스폰하지 않음
+            // 🔥 [화면 단어 개수 제한] 3개 이상 떠있으면 새로운 단어 생성 안 함
             const activeCount = rainWords.filter(w => !w.isDead).length;
             if(activeCount >= 3) return;
 
@@ -784,8 +784,8 @@
             }
 
             let startX = Math.random() * 70;
-            // 🔥 X축 이동 속도도 완화 (지그재그가 너무 빠르지 않게)
-            let vx = (Math.random() * 0.4 + 0.2) * (Math.random() < 0.5 ? 1 : -1); 
+            // 🔥 지그재그(X축 이동) 속도 완화 (눈이 어지럽지 않게)
+            let vx = (Math.random() * 0.3 + 0.1) * (Math.random() < 0.5 ? 1 : -1); 
 
             span.style.left = startX + "%"; 
             span.style.top = "-40px";
@@ -797,9 +797,9 @@
                 isBonus: isBonus, bonusType: myBonusType, isDead: false 
             });
             
-            // 점수에 비례하여 속도 증가율 완화 (기존 0.05에서 0.02로)
+            // 점수에 따른 속도 증가율도 아주 미세하게 수정
             if(minigameScore > 0 && minigameScore % 50 === 0) {
-                rainSpeedBase += 0.02; 
+                rainSpeedBase += 0.01; 
             }
         }, spawnRate));
         
