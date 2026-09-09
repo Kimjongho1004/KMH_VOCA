@@ -81,25 +81,25 @@
         .history-list { text-align: left; max-height: 60vh; overflow-y: auto; margin-bottom: 20px; padding: 0 5px; }
         .history-item { background: #fff; border: 1px solid #eef2f6; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
 
-        /* 게임 스타일: 산성비 */
-        .rain-container { flex-grow: 1; position: relative; background: #eef2f6; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 2px solid #dce4ec; min-height: 300px; }
-        .falling-word { position: absolute; font-size: 1.2rem; font-weight: bold; color: var(--primary); padding: 5px 10px; background: rgba(255,255,255,0.9); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap; transition: top 0.1s linear; }
-        
-        /* 💡 추가: 모바일 키보드 활성화 시 레이아웃 깨짐 방지용 래퍼 */
-        .rain-keyboard-safe-area { display: flex; flex-direction: column; flex-grow: 1; height: 100%; justify-content: flex-end; }
+        /* 게임 스타일: 산성비 (위치 조정 완료) */
+        .rain-container { flex-grow: 1; position: relative; background: #eef2f6; border-radius: 15px; overflow: hidden; margin-bottom: 10px; border: 3px solid #dce4ec; min-height: 200px; }
+        .falling-word { position: absolute; font-size: 1.25rem; font-weight: 900; color: var(--primary); padding: 6px 12px; background: rgba(255,255,255,0.95); border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); white-space: nowrap; transition: top 0.1s linear; border: 1px solid #dce4ec; }
 
         /* 게임 스타일: 타자 */
         .typing-target { font-size: 1.3rem; font-weight: 800; color: #2c3e50; line-height: 1.6; margin-bottom: 20px; background: #f8f9fa; padding: 20px; border-radius: 15px; border-left: 5px solid #2ecc71; word-break: break-word; }
         
-        /* 게임 스타일: 카드 짝맞추기 */
+        /* 게임 스타일: 카드 짝맞추기 (모양 및 글씨 개선) */
         .match-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; margin-bottom: 20px; }
-        .match-card { background: #eef2f6; border: 2px solid #dce4ec; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1rem; font-weight: bold; color: transparent; cursor: pointer; transition: all 0.3s; min-height: 80px; text-align: center; padding: 5px; word-break: break-word; position: relative; }
-        .match-card.flipped { background: white; color: var(--primary); border-color: var(--primary); transform: rotateY(0deg); }
-        .match-card.matched { background: var(--success); color: white; border-color: #27ae60; cursor: default; visibility: hidden; opacity: 0; transition: visibility 0s 0.3s, opacity 0.3s linear; }
-        .match-ko-hint { font-size: 0.8rem; color: var(--text-sub); margin-top: 4px; font-weight: 600; display: none; }
-        .match-card.flipped .match-ko-hint { display: block; }
+        .match-card { background: #eef2f6; border: 2px solid #dce4ec; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.3s; min-height: 90px; text-align: center; padding: 5px; box-shadow: 0 4px 0 #dce4ec; }
+        .match-card:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .match-card .card-content { display: none; flex-direction: column; pointer-events: none; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .match-card.flipped { background: white; border-color: var(--primary); box-shadow: 0 4px 0 var(--primary); }
+        .match-card.flipped .card-content { display: flex; }
+        .match-word { font-size: 1.15rem; font-weight: 900; color: var(--primary); line-height: 1.2; word-break: break-word; }
+        .match-mean { font-size: 0.85rem; font-weight: 700; color: var(--text-sub); margin-top: 6px; }
+        .match-card.matched { background: var(--success); border-color: #27ae60; box-shadow: 0 4px 0 #27ae60; visibility: hidden; opacity: 0; transition: visibility 0s 0.3s, opacity 0.3s linear; }
 
-        .game-top-bar { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; padding: 10px 15px; background: var(--primary-light); border-radius: 12px; color: var(--primary); }
+        .game-top-bar { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; padding: 12px 15px; background: var(--primary-light); border-radius: 12px; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -173,7 +173,7 @@
             </button>
             <button class="menu-card" onclick="startMatchGame()">
                 <div class="menu-icon" style="background: #fff3cd; color: #d35400;">🃏</div>
-                <div class="menu-text"><div class="menu-title">단어 짝맞추기</div><div class="menu-desc">같은 영어 단어(뜻 포함) 2개 찾기</div></div>
+                <div class="menu-text"><div class="menu-title">단어 짝맞추기</div><div class="menu-desc">완전히 똑같은 카드 2장 찾기</div></div>
             </button>
         </div>
         
@@ -263,26 +263,29 @@
     </div>
 </div>
 
-<!-- 🎮 미니 게임 1: 단어 비 내리기 -->
-<div class="container" id="minigame-rain" style="padding-bottom: 10px;">
-    <!-- 💡 키보드가 올라올 때 화면이 찌그러지지 않도록 flex-grow 구조를 약간 변경했습니다. -->
-    <div class="rain-keyboard-safe-area">
-        <div class="game-top-bar" style="margin-bottom: 10px;">
-            <span>점수: <span id="rain-score">0</span></span>
-            <span style="color:var(--danger)">생명력: <span id="rain-life">5</span></span>
-        </div>
-        <div class="rain-container" id="rain-container"></div>
-        <div style="margin-top: 5px;">
-            <input type="text" id="rain-input" placeholder="떨어지는 단어를 입력하세요!" autocomplete="off" onkeypress="if(event.key === 'Enter') checkRainWord()" style="margin-bottom: 5px;">
-            <button class="app-btn btn-subtle" style="padding: 12px; margin-bottom: 0;" onclick="quitMinigame()">그만하기</button>
-        </div>
+<!-- 🎮 미니 게임 1: 단어 비 내리기 (레이아웃 수정 완료) -->
+<div class="container" id="minigame-rain">
+    <div class="game-top-bar" style="margin-bottom: 10px;">
+        <span>점수: <span id="rain-score">0</span></span>
+        <span style="color:var(--danger)">생명력: <span id="rain-life">5</span></span>
     </div>
+    
+    <!-- 💡 입력창을 게임 화면 맨 위로 올렸습니다. -->
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="rain-input" placeholder="여기에 단어 입력! (Enter)" autocomplete="off" onkeypress="if(event.key === 'Enter') checkRainWord()" style="margin-bottom: 0; padding: 15px; font-size: 1.1rem;">
+    </div>
+    
+    <!-- 💡 비 내리는 화면은 입력창 아래로 위치합니다. -->
+    <div class="rain-container" id="rain-container"></div>
+    
+    <button class="app-btn btn-subtle" style="padding: 12px; margin-top: auto;" onclick="quitMinigame()">그만하기</button>
 </div>
 
 <!-- 🎮 미니 게임 2: 스피드 타자 -->
 <div class="container" id="minigame-typing">
     <div class="game-top-bar">
         <span>점수: <span id="type-score">0</span></span>
+        <!-- 💡 시간을 180초로 늘렸습니다 -->
         <span style="color:var(--danger)">남은 시간: <span id="type-time">180</span>초</span>
     </div>
     <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
@@ -324,7 +327,7 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzqnC_D8zMi9SOnis4cRldIuqFPtele1Xc27MtgqhtTcsfdbFtPsU8GaB1E30Mku8A/exec";
     
-    // 💡 모든 단어를 소문자로 통일한 3차 평가용 83개 단어 데이터
+    // 💡 3차 평가용 83개 단어 데이터 유지
     const vocabData = [
         {word: "completely", meaning: "완전히, 전적으로", sent: "Every product in our catalog is [?] guaranteed.", ko: "우리 카탈로그의 모든 제품은 <b><u>완전히</u></b> 보증됩니다."},
         {word: "refuse", meaning: "거절하다, 거부하다", sent: "The shipment was [?]d by the purchaser due to damage caused in transit.", ko: "그 화물은 운송 중 발생한 손상 때문에 구매자에게 인수를 <b><u>거부당했다</u></b>."},
@@ -621,7 +624,7 @@
     }
 
     // ==========================================
-    // 🎮 미니 게임 로직 시작
+    // 🎮 미니 게임 로직
     // ==========================================
     let currentMinigame = "";
     let minigameScore = 0;
@@ -655,7 +658,6 @@
         else if(currentMinigame === "match") startMatchGame();
     }
     
-    // 🔗 점수 공유하기 (Web Share API)
     function shareScore() {
         const gameTitles = { rain: "단어 비 내리기", typing: "스피드 문장 타자", match: "단어 짝맞추기" };
         const shareText = `🔥 VOCA Master 랭킹 도전!\n${userName} 학생이 [${gameTitles[currentMinigame]}] 게임에서 ${minigameScore}을 기록했습니다!\n\n과연 이 기록을 깰 수 있을까요? 🏆`;
@@ -675,8 +677,11 @@
         hideAllScreens(); document.getElementById('minigame-rain').style.display = 'flex';
         document.getElementById('rain-container').innerHTML = '';
         minigameScore = 0; rainLife = 5; updateRainStats();
-        document.getElementById('rain-input').value = '';
-        document.getElementById('rain-input').focus();
+        
+        const inputField = document.getElementById('rain-input');
+        inputField.value = '';
+        inputField.focus();
+        
         rainWords = []; clearAllGameTimers();
         
         let spawnRate = 2000;
@@ -688,12 +693,12 @@
             const span = document.createElement('span');
             span.className = 'falling-word';
             span.innerText = wordData.word;
-            span.style.left = Math.random() * 75 + "%"; // 화면 밖으로 넘어가지 않게 조절
-            span.style.top = "-30px";
+            span.style.left = Math.random() * 70 + "%"; 
+            span.style.top = "-40px";
             document.getElementById('rain-container').appendChild(span);
-            rainWords.push({ el: span, text: wordData.word, top: -30 });
+            rainWords.push({ el: span, text: wordData.word, top: -40 });
             
-            if(minigameScore > 0 && minigameScore % 50 === 0) speed += 0.2; // 점수마다 속도 증가
+            if(minigameScore > 0 && minigameScore % 50 === 0) speed += 0.2; 
         }, spawnRate));
         
         gameIntervals.push(setInterval(() => {
@@ -710,6 +715,7 @@
             }
         }, 50));
     }
+    
     function checkRainWord() {
         const input = document.getElementById('rain-input');
         const val = input.value.trim().toLowerCase();
@@ -724,7 +730,7 @@
     }
     function updateRainStats() { document.getElementById('rain-score').innerText = minigameScore; document.getElementById('rain-life').innerText = rainLife; }
 
-    // ⌨️ 2. 스피드 문장 타자 (시간 3분(180초)으로 연장)
+    // ⌨️ 2. 스피드 문장 타자 (180초)
     let typeTime = 180, currentTypeTarget = "";
     function startTypingGame() {
         hideAllScreens(); document.getElementById('minigame-typing').style.display = 'flex';
@@ -740,45 +746,57 @@
             if(typeTime <= 0) showMinigameResult("typing", "⌨️ 스피드 문장 타자", minigameScore);
         }, 1000));
     }
+    
     function nextTypingSentence() {
         const item = vocabData[Math.floor(Math.random() * vocabData.length)];
         currentTypeTarget = item.sent.replace("[?]", item.word);
         document.getElementById('type-target-text').innerText = currentTypeTarget;
         document.getElementById('type-input').value = '';
     }
+    
     function checkTypingMatch() {
         const val = document.getElementById('type-input').value;
         if(val === currentTypeTarget) { minigameScore += 20; document.getElementById('type-score').innerText = minigameScore; nextTypingSentence(); }
     }
 
-    // 🃏 3. 단어 짝맞추기 (동일한 단어 쌍 찾기 + 한글 뜻 힌트)
+    // 🃏 3. 단어 짝맞추기 (동일한 두 카드 찾기 + 뜻 노출)
     let matchCards = [], firstMatch = null, matchPairsFound = 0, matchTime = 0;
     function startMatchGame() {
         hideAllScreens(); document.getElementById('minigame-match').style.display = 'flex';
         minigameScore = 0; matchPairsFound = 0; matchTime = 0; firstMatch = null; clearAllGameTimers();
         document.getElementById('match-score').innerText = matchPairsFound; document.getElementById('match-time').innerText = matchTime;
         
+        // 무작위로 6개 단어 추출
         let selected = vocabData.sort(() => Math.random() - 0.5).slice(0, 6);
         let deck = [];
         
-        // 💡 수정된 로직: 동일한 영어 단어(뜻 힌트 포함)를 2장씩 생성
+        // 💡 완전히 동일한 객체를 쌍으로(2개씩) 푸시 (총 12장)
         selected.forEach((item, idx) => { 
-            deck.push({ text: item.word, hint: item.meaning, id: idx }); 
-            deck.push({ text: item.word, hint: item.meaning, id: idx }); 
+            let cardObj = { text: item.word, hint: item.meaning, id: idx };
+            deck.push(cardObj, cardObj); 
         });
+        
         deck.sort(() => Math.random() - 0.5); // 카드 섞기
         
         const container = document.getElementById('match-container'); container.innerHTML = '';
         deck.forEach((card, idx) => {
             const btn = document.createElement('div'); btn.className = 'match-card';
-            // 💡 카드 내부에 단어와 숨겨진 힌트를 함께 배치
-            btn.innerHTML = `<span>${card.text}</span><span class="match-ko-hint">${card.hint}</span>`;
+            
+            // 💡 카드 내부에 '단어'와 '뜻'을 함께 배치 (기본은 display:none으로 숨김)
+            btn.innerHTML = `
+                <div class="card-content">
+                    <div class="match-word">${card.text}</div>
+                    <div class="match-mean">${card.hint}</div>
+                </div>
+            `;
+            
             btn.onclick = () => flipMatchCard(btn, card);
             container.appendChild(btn);
         });
         
         gameIntervals.push(setInterval(() => { matchTime++; document.getElementById('match-time').innerText = matchTime; }, 1000));
     }
+    
     function flipMatchCard(btn, cardData) {
         if(btn.classList.contains('flipped') || btn.classList.contains('matched') || document.querySelectorAll('.match-card.flipped:not(.matched)').length >= 2) return;
         btn.classList.add('flipped');
@@ -786,9 +804,17 @@
         if(!firstMatch) { firstMatch = { btn: btn, data: cardData }; return; }
         
         if(firstMatch.data.id === cardData.id) {
-            setTimeout(() => { btn.classList.add('matched'); firstMatch.btn.classList.add('matched'); firstMatch = null; matchPairsFound++; document.getElementById('match-score').innerText = matchPairsFound; if(matchPairsFound >= 6) showMinigameResult("match", "🃏 단어 짝맞추기", matchTime, "초"); }, 400);
+            setTimeout(() => { 
+                btn.classList.add('matched'); firstMatch.btn.classList.add('matched'); 
+                firstMatch = null; matchPairsFound++; 
+                document.getElementById('match-score').innerText = matchPairsFound; 
+                if(matchPairsFound >= 6) showMinigameResult("match", "🃏 단어 짝맞추기", matchTime, "초"); 
+            }, 400);
         } else {
-            setTimeout(() => { btn.classList.remove('flipped'); firstMatch.btn.classList.remove('flipped'); firstMatch = null; }, 800);
+            setTimeout(() => { 
+                btn.classList.remove('flipped'); firstMatch.btn.classList.remove('flipped'); 
+                firstMatch = null; 
+            }, 800);
         }
     }
 </script>
