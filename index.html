@@ -343,3 +343,662 @@
             <div style="font-size: 1rem; color: var(--text-sub); font-weight: bold; margin-bottom: 5px;">내 최종 기록</div>
             <div style="font-size: 3.5rem; font-weight: 900; color: var(--primary); line-height: 1;" id="result-score">0</div>
             <div style="font-size: 1rem; color: var(--text-sub); margin-top: 5px; font-weight: bold;">최고 기록: <span id="result-highscore" style="color: #d35400;">0</span></div>
+        </div>
+        
+        <button class="app-btn btn-share" onclick="shareScore()">🚀 카카오톡/문자로 내 점수 자랑하기</button>
+        <button class="app-btn btn-primary" onclick="restartCurrentMinigame()">다시 도전하기</button>
+        <button class="app-btn btn-subtle" onclick="returnToMenuFromScore()">메뉴로 돌아가기</button>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzqnC_D8zMi9SOnis4cRldIuqFPtele1Xc27MtgqhtTcsfdbFtPsU8GaB1E30Mku8A/exec";
+    
+    // 💡 4차 평가용 82개 단어 데이터로 완벽히 교체 완료!
+    const vocabData = [
+        {word: "check in", meaning: "체크인하다", sent: "Please be sure to [?] by 7 P.M.", ko: "오후 7시까지 반드시 <b><u>체크인하십시오</u></b>."},
+        {word: "compensate", meaning: "보상하다", sent: "The hotel [?]d guests for the erroneous charges.", ko: "그 호텔은 그 손님에게 잘못된 청구액에 대해 <b><u>보상했다</u></b>."},
+        {word: "complimentary", meaning: "무료의", sent: "Guests are given a [?] light breakfast.", ko: "손님들은 가벼운 <b><u>무료</u></b> 아침 식사를 제공한다."},
+        {word: "chef", meaning: "주방장", sent: "The restaurant's head [?] is famous across Europe.", ko: "그 식당의 수석 <b><u>주방장</u></b>은 유럽 전역에서 유명하다."},
+        {word: "container", meaning: "용기, 그릇", sent: "Food may be kept for longer periods by storing it in airtight [?]s.", ko: "음식은 밀폐<b><u>용기</u></b>에 보관함으로써 더 오랜 기간 동안 보존될 수 있다."},
+        {word: "elegant", meaning: "우아한, 고상한", sent: "The recently renovated lobby boasts [?] decor.", ko: "최근에 개조된 로비는 <b><u>우아한</u></b> 장식을 자랑한다."},
+        {word: "flavor", meaning: "맛, 풍미", sent: "The shop sells ice cream in a variety of [?]s.", ko: "그 가게는 다양한 <b><u>맛</u></b>의 아이스크림을 판다."},
+        {word: "accommodate", meaning: "수용하다, 숙박시키다", sent: "The hotel can [?] 350 guests.", ko: "그 호텔은 350명의 손님을 <b><u>수용할</u></b> 수 있다."},
+        {word: "available", meaning: "이용 가능한, 시간이 있는", sent: "The sauna is [?] to all registered guests.", ko: "사우나는 등록된 모든 투숙객이 <b><u>이용할 수</u></b> 있다."},
+        {word: "reception", meaning: "환영회, 접수처", sent: "Visitors must register at the [?] desk upon arrival.", ko: "방문객들은 도착하는 대로 <b><u>접수처</u></b>에서 등록해야 한다."},
+        {word: "in advance", meaning: "미리, 사전에", sent: "Guests must notify the front desk [?] to reserve an airport shuttle.", ko: "투숙객은 공항 장기 왕복 버스를 예약하려면 프런트 데스크에 <b><u>미리</u></b> 알려야 한다."},
+        {word: "refreshments", meaning: "다과, 가벼운 음식물", sent: "Before leaving the resort, the group was served some [?].", ko: "리조트를 떠나기 전에, 그 단체는 약간의 <b><u>다과</u></b>를 제공받았다."},
+        {word: "make", meaning: "~을 하다, ~을 만들다", sent: "To [?] telephone calls from your room, dial 9 first.", ko: "객실에서 전화를 <b><u>거시려면(하시려면)</u></b>, 9번을 먼저 누르세요."},
+        {word: "cater", meaning: "(연회 등의) 음식물을 공급하다", sent: "The Stovepipe Grill charges reasonable rates to [?] large events.", ko: "Stovepipe Grill사는 규모가 큰 행사의 <b><u>음식을 공급하는 데</u></b> 합리적인 요금을 청구한다."},
+        {word: "reservation", meaning: "예약, 지정", sent: "Once you receive confirmation by e-mail, the [?] has been made.", ko: "확인 이메일을 받으면, <b><u>예약</u></b>이 이루어진 것입니다."},
+        {word: "beverage", meaning: "음료", sent: "Snacks and [?]s are available in the business class lounge.", ko: "비즈니스 클래스는 라운지에서 간식과 <b><u>음료</u></b>를 이용할 수 있다."},
+        {word: "confirm", meaning: "확인하다, 확정하다", sent: "Please [?] your seating reservation prior to arrival.", ko: "도착 전에 귀하의 좌석 예약을 <b><u>확인하세요</u></b>."},
+        {word: "cancel", meaning: "취소하다", sent: "Those wishing to [?] a booking are asked to do so at least a day in advance.", ko: "예약을 <b><u>취소하고</u></b> 싶은 사람들은 적어도 하루 전에 취소해야 한다."},
+        {word: "rate", meaning: "요금", sent: "The inn offers fine rooms at affordable [?]s.", ko: "그 여관은 좋은 방들을 알맞은 <b><u>요금</u></b>에 제공한다."},
+        {word: "conveniently", meaning: "편리하게", sent: "Our hotel is [?] located in downtown Sydney.", ko: "우리 호텔은 시드니 중심가에 <b><u>편리하게</u></b> 위치해 있습니다."},
+        {word: "decorate", meaning: "장식하다", sent: "The restaurant owner [?]d its interior with paintings of Italy.", ko: "그 식당 주인은 식당 내부를 이탈리아를 그린 그림들로 <b><u>장식했다</u></b>."},
+        {word: "information", meaning: "정보, 안내", sent: "Further [?] about the resort can be found on its Web site.", ko: "그 리조트에 대한 자세한 <b><u>정보</u></b>는 웹사이트에서 찾을 수 있습니다."},
+        {word: "retain", meaning: "유지하다, 보유하다", sent: "The cafeteria [?]s customers by offering inexpensive, flavorful food.", ko: "그 식당은 저렴하면서도 맛있는 음식을 제공함으로써 고객을 <b><u>유지한다</u></b>."},
+        {word: "atmosphere", meaning: "분위기, 환경", sent: "The hotel provides a comfortable [?].", ko: "그 호텔은 편안한 <b><u>분위기</u></b>를 제공한다."},
+        {word: "cuisine", meaning: "(독특한)요리", sent: "Jacque will prepare an exquisite selection of international [?].", ko: "Jacque는 훌륭하고 엄선된 세계 <b><u>요리</u></b>를 준비할 것이다."},
+        {word: "sequence", meaning: "순서, 연속", sent: "The head chef makes sure every dinner order is prepared in the correct [?].", ko: "수석 주방장은 모든 저녁 식사 주문이 정확한 <b><u>순서</u></b>대로 준비되었는지 확인한다."},
+        {word: "extensive", meaning: "광범위한, 넓은", sent: "The restaurant offers an [?] range of Chinese dishes.", ko: "그 식당은 <b><u>광범위한</u></b> 종류의 중국요리를 제공한다."},
+        {word: "prior", meaning: "전의, 먼저의", sent: "[?] to checkout, guests are asked to fill out a survey.", ko: "체크아웃에 <b><u>앞서</u></b>, 투숙객들은 설문 조사를 작성해 달라는 요청을 받는다."},
+        {word: "book", meaning: "예약하다", sent: "The restaurant is busy on weekends, so [?]ing a table is necessary.", ko: "그 식당는 주말에 붐벼서, 테이블을 <b><u>예약하는 것</u></b>이 필수다."},
+        {word: "amenity", meaning: "편의시설", sent: "The hotel [?]ies include a health center and a swimming pool.", ko: "그 호텔의 <b><u>편의시설</u></b>은 보건소와 수영장을 포함한다."},
+        {word: "belongings", meaning: "소지품, 소유품", sent: "Safety boxes are available in every room for the storage of valuable [?].", ko: "귀중품 보관을 위해 모든 방에서 귀중품 보관함을 이용하실 수 있습니다."},
+        {word: "entirely", meaning: "완전히", sent: "The Eatery is known to cook [?] with organic produce.", ko: "Eatery사는 <b><u>완전히</u></b> 유기농 농작물로만 조리하는 것으로 알려져 있다."},
+        {word: "ease", meaning: "완화시키다", sent: "Jennifer [?]d the temperature of the oven to avoid burning her dish.", ko: "Jennifer는 요리를 태우지 않기 위해 오븐의 온도를 <b><u>완화했다</u></b>."},
+        {word: "ingredient", meaning: "재료, 성분", sent: "The chef shops for fresh [?]s each morning at the local market.", ko: "그 요리사는 매일 아침 현지 시장에서 신선한 <b><u>재료</u></b>들을 산다."},
+        {word: "sip", meaning: "음미하며 마시다, 홀짝거리다", sent: "[?] your beverages at the cafe's new outdoor area!", ko: "카페의 새로운 야외 공간에서 음료를 <b><u>음미하세요!</u></b>"},
+        {word: "stir", meaning: "휘젓다, 뒤섞다", sent: "[?] the sauce to prevent it from sticking.", ko: "소스가 달라붙는 것을 방지하기 위해 <b><u>휘저어</u></b> 주세요."},
+        {word: "choice", meaning: "선택물, 선택 사항, 선택", sent: "Today's special comes with the [?] of soup or a salad.", ko: "오늘의 특선메뉴는 수프나 샐러드 중 <b><u>선택하신 것</u></b>과 함께 제공된다."},
+        {word: "complication", meaning: "복잡한 문제", sent: "We counted several [?]s with our reservation.", ko: "우리는 예약과 관련해 몇몇 <b><u>복잡한 문제</u></b>에 맞닥뜨렸다."},
+        {word: "freshness", meaning: "신선함", sent: "Wrapping produce in paper helps prolong its [?].", ko: "농산물을 종이로 포장해서 두면 <b><u>신선함</u></b>을 오래 지속시켜 준다."},
+        {word: "occupancy", meaning: "(호텔 등의) 이용률", sent: "The ski resort's [?] peaks in January.", ko: "그 스키 리조트의 <b><u>이용률</u></b>은 1월에 최고조에 달한다."},
+        {word: "spot", meaning: "발견하다, 찾아내다, 알아채다", sent: "When preparing to pay for the meal, Marie [?]ted a mistake on the bill.", ko: "식사비를 지불할 준비를 할 때, Marie는 계산서에서 오류를 <b><u>발견했다</u></b>."},
+        {word: "decline", meaning: "감소, 하락", sent: "A sharp [?] in the number of buyers has lowered this year's profits.", ko: "구매자 수의 급격한 <b><u>감소</u></b>가 금년도 수익을 떨어트렸다."},
+        {word: "markedly", meaning: "현저하게, 눈에 띄게", sent: "Corporate profits continue to increase [?].", ko: "기업 이윤이 계속해서 <b><u>현저하게</u></b> 증가하고 있다."},
+        {word: "increase", meaning: "인상, 증가", sent: "All employees will receive a five percent pay [?] next year.", ko: "모든 직원들은 내년에 5퍼센트의 임금 <b><u>인상</u></b>을 받을 것이다."},
+        {word: "revenue", meaning: "수입", sent: "The company's [?] was boosted by higher album sales.", ko: "회사 <b><u>수입</u></b>이 더 늘어난 앨범 판매로 인해 증대되었다."},
+        {word: "projection", meaning: "예상(치)", sent: "This month's income [?]s are higher than last month's were.", ko: "이번 달 수입 <b><u>예상치</u></b>는 지난달 것보다 높다."},
+        {word: "substantial", meaning: "상당한", sent: "The company made [?] investments in several emerging markets.", ko: "그 회사는 몇몇 신흥 시장에 <b><u>상당한</u></b> 투자를 했다."},
+        {word: "anticipate", meaning: "예상하다, 기대하다", sent: "We [?] a 40 percent increase in sales next year.", ko: "우리는 내년에 40퍼센트의 매출 증대를 <b><u>예상한다</u></b>."},
+        {word: "significantly", meaning: "상당히, 두드러지게", sent: "The layoffs will reduce expenses [?].", ko: "직원 감원은 경비를 <b><u>상당히</u></b> 감소시켜 줄 것이다."},
+        {word: "estimate", meaning: "추정하다, 추산하다", sent: "The laptops were [?]d to bring in over $ 50 million.", ko: "그 노트북 컴퓨터는 5천만 달러 이상의 이익을 가져올 것으로 <b><u>추정되었다</u></b>."},
+        {word: "shift", meaning: "옮기다, 이동하다", sent: "The firm [?]ed some capital into its newest investment project.", ko: "그 회사는 가장 최근의 투자 프로젝트로 약간의 자금을 <b><u>옮겼다</u></b>."},
+        {word: "fee", meaning: "요금; 수수료", sent: "The merchant may charge a small [?] to process credit card payments.", ko: "그 상인은 신용 카드 결제를 처리하기 위해 소액의 <b><u>요금(수수료)</u></b>을 청구할지도 모른다."},
+        {word: "production", meaning: "생산량, 생산", sent: "[?] will rise drastically with the addition of a third shift.", ko: "3교대의 추가로 <b><u>생산량</u></b>이 급격하게 늘어날 것이다."},
+        {word: "sale", meaning: "매출액, 매상고; (할인) 판매", sent: "Domestic [?]s have recently begun to drop.", ko: "국내 <b><u>매출액</u></b>이 최근에 하락하기 시작했다."},
+        {word: "impressive", meaning: "굉장한, 인상적인", sent: "NewWear made [?] gains in the sportswear market.", ko: "NewWear사는 스포츠웨어 시장에서 <b><u>굉장한</u></b> 이익을 거두었다."},
+        {word: "representative", meaning: "직원, 외판원; 대표자", sent: "The sales [?] developed an impressive client base.", ko: "그 영업사원은 굉장한 고객 기반을 구축했다."},
+        {word: "recent", meaning: "최근의", sent: "Additional costs are reflected in the supplier's most [?] price quote.", ko: "추가 비용은 공급자의 가장 <b><u>최근의</u></b> 견적서에 반영되어 있다."},
+        {word: "exceed", meaning: "~을 초과하다", sent: "The new restaurant's profits [?]ed initial projections.", ko: "새 레스토랑의 수익은 초기 예상치를 <b><u>초과했다</u></b>."},
+        {word: "improvement", meaning: "향상", sent: "The [?]s to the chair designs led to increased sales.", ko: "의자 디자인의 <b><u>향상</u></b>은 판매량 증대로 이어졌다."},
+        {word: "employer", meaning: "고용주", sent: "The largest [?] in the city is the automotive factory.", ko: "그 도시의 최대 <b><u>고용주</u></b>는 자동차 공장이다."},
+        {word: "regular", meaning: "정기적인; 단골의", sent: "Special events were held to reward [?] customers.", ko: "<b><u>단골</u></b> 고객들에게 보답하기 위한 특별 행사들이 개최되었다."},
+        {word: "summarize", meaning: "요약하다", sent: "EquityCorp [?]d its business operations in the annual report.", ko: "EquityCorp사는 연례 보고서에 자사의 운영 현황을 <b><u>요약했다</u></b>."},
+        {word: "typically", meaning: "보통, 일반적으로", sent: "Cell phones [?] go on sale before new models are released.", ko: "휴대전화는 <b><u>보통</u></b> 새로운 모델이 출시되기 전에 할인 판매된다."},
+        {word: "whole", meaning: "전체의, 온전한", sent: "The [?] amount of the loan must be paid in 60 days.", ko: "대출금 <b><u>전액(전체)</u></b>은 60일 내로 상환해야 한다."},
+        {word: "growth", meaning: "성장, 발전", sent: "The company will be unable to maintain its present rate of [?].", ko: "그 회사는 현재의 <b><u>성장</u></b>률을 유지할 수 없을 것이다."},
+        {word: "figure", meaning: "총액, 합계 수", sent: "Last quarter's sales [?]s need to be sent to the main office.", ko: "지난 분기 매출 <b><u>총액</u></b>은 본사로 보내져야 한다."},
+        {word: "steady", meaning: "꾸준한; 안정된", sent: "The [?] stock market has given investors more confidence.", ko: "<b><u>안정된</u></b> 주식시장은 투자자들에게 더 많은 자신감을 주었다."},
+        {word: "frequent", meaning: "빈번한, 잦은", sent: "The company was able to adapt quickly despite [?] market changes.", ko: "그 회사는 <b><u>빈번한</u></b> 시장 변화에도 불구하고 재빨리 적응 할 수 있었다."},
+        {word: "achieve", meaning: "달성하다, 성취하다", sent: "The corporation [?]d its sales goals for the year.", ko: "그 기업은 금년도 매출 목표를 <b><u>달성했다</u></b>."},
+        {word: "assumption", meaning: "추정, 산정", sent: "DonCo's [?] that consumers value quality over price proved correct.", ko: "소비자들이 가격보다 품질을 중시한다는 DonCo사의 <b><u>추정</u></b>은 옳은 것을 밝혀졌다."},
+        {word: "share", meaning: "공유하다, 함께쓰다", sent: "The CEO [?]d some excess profits with employees through bonuses.", ko: "그 최고경영자는 상여금을 통해 직원들과 초과 수익의 일부를 <b><u>공유했다</u></b>."},
+        {word: "encouraging", meaning: "고무적인, 힘을 북돋아 주는", sent: "The figures for this quarter were [?].", ko: "이번 분기의 수치는 <b><u>고무적이었다</u></b>."},
+        {word: "incur", meaning: "(손실을) 입다, (빚을) 지다", sent: "We have [?]red significant operating losses since our inception a decade ago.", ko: "우리는 10년 전 개업한 이래 심각한 운영 손실을 <b><u>입어 왔다</u></b>."},
+        {word: "slightly", meaning: "약간", sent: "Inquiries regarding purchases are expected to decrease [?].", ko: "구매에 관한 문의가 <b><u>약간</u></b> 감소할 것으로 예상된다."},
+        {word: "profit", meaning: "수익, 이익", sent: "The [?]s from the auction will go to charity.", ko: "경매 <b><u>수익</u></b>은 자선 단체로 보내질 것이다."},
+        {word: "reliant", meaning: "의존하는, 의지하는", sent: "Much of the business is [?] on sales from returning customers.", ko: "사업의 대부분은 재방문 고객들의 매출에 <b><u>의존한다</u></b>."},
+        {word: "illustrate", meaning: "분명히 보여주다, 설명하다", sent: "The line graph [?]d the rise in expenses.", ko: "선 그래프가 비용의 상승을 <b><u>분명히 보여준다</u></b>."},
+        {word: "inaccurate", meaning: "부정확한", sent: "The calculations in the report were [?].", ko: "보고서의 계산은 <b><u>부정확했다</u></b>."},
+        {word: "percentage", meaning: "비율, 백분율", sent: "The [?] of people buying digital music players has decreased somewhat.", ko: "디지털 음악 재생기를 구매하는 사람의 <b><u>비율</u></b>이 다소 감소했다."},
+        {word: "reduce", meaning: "줄이다, 감소시키다", sent: "Management [?]d the travel budget in an effort to cut costs.", ko: "경영진은 비용을 절감하고자 출장 예산을 <b><u>줄였다</u></b>."},
+        {word: "tend", meaning: "~하는 경향이 있다, ~하기 쉽다", sent: "Corporate profits [?] to rise in line with national income.", ko: "회사 수익은 국민 소득과 함께 증가하는 <b><u>경향이 있다</u></b>."},
+        {word: "beyond", meaning: "넘어서, 이상으로", sent: "The monthly sales figures were far [?] the company's expectations.", ko: "월 매출액은 회사의 예상을 훨씬 <b><u>넘어섰다</u></b>."}
+    ];
+
+    let currentIdx = 0, score = 0, userName = "", quizSet = [], selectedBaseMode = "", wrongQuestions = [];
+    let learnCurrentIdx = 0, learningTimeout1, learningTimeout2, learningTimeout3;
+    let contCurrentIdx = 0, isContPlaying = false, contTimeout1, contTimeout2;
+    const MAX_QUESTIONS = 30;
+
+    // --- 고품질 음성 로직 ---
+    let availableVoices = [];
+    function populateVoiceList() { availableVoices = window.speechSynthesis.getVoices(); }
+    populateVoiceList();
+    if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoiceList; }
+
+    function speakText(text, lang, rate = 1.0, onEndCallback = null) {
+        if (!window.speechSynthesis) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang; utterance.rate = rate; 
+        if (availableVoices.length > 0) {
+            let voicesForLang = availableVoices.filter(v => v.lang.includes(lang.substring(0, 2)));
+            let selectedVoice = voicesForLang.find(v => v.name.includes('Online') || v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Siri') || v.name.includes('Google')) || voicesForLang[0];
+            if (selectedVoice) utterance.voice = selectedVoice;
+        }
+        if (onEndCallback) { utterance.onend = onEndCallback; utterance.onerror = onEndCallback; }
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // --- 화면 이동 및 제어 ---
+    function resetBodyScroll() {
+        document.body.style.overflow = '';
+        ['minigame-rain', 'minigame-typing'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.height = ''; 
+        });
+    }
+
+    function hideAllScreens() {
+        ['main-screen', 'mode-screen', 'history-screen', 'learning-screen', 'continuous-screen', 'game-screen', 'score-screen', 'minigame-rain', 'minigame-typing', 'minigame-match', 'game-result-screen'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
+        resetBodyScroll();
+    }
+
+    function goToModeSelection() {
+        userName = document.getElementById('user-name').value.trim();
+        if(!userName) { alert("이름을 입력해 주세요!"); return; }
+        hideAllScreens();
+        document.getElementById('mode-screen').style.display = 'flex';
+    }
+    
+    function returnToMainScreen() { hideAllScreens(); document.getElementById('main-screen').style.display = 'flex'; }
+    
+    function returnToMenuFromScore() {
+        hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex';
+        const btn = document.getElementById('send-btn');
+        if(btn) { btn.disabled = false; btn.innerText = "결과 제출하기"; btn.style.display = 'block'; }
+        const status = document.getElementById('send-status');
+        if(status) status.innerText = "";
+    }
+
+    function confirmReturnToMenu() {
+        if(confirm("학습 메뉴로 돌아갈까요?")) {
+            window.speechSynthesis.cancel();
+            hideAllScreens();
+            document.getElementById('mode-screen').style.display = 'flex';
+        }
+    }
+
+    // --- 학습 기록 관리 ---
+    function saveLearningHistory(mode, finalScore, maxScore) {
+        let history = JSON.parse(localStorage.getItem('vocaHistory')) || [];
+        const now = new Date();
+        const dateString = `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        let modeName = "";
+        if(mode === 'multiple') modeName = "객관식";
+        else if(mode === 'subjective') modeName = "주관식";
+        else if(mode === 'mixed') modeName = "통합 문제";
+        else if(mode === 'composition') modeName = "문장 익히기";
+
+        history.unshift({ date: dateString, mode: modeName, score: finalScore, total: maxScore });
+        localStorage.setItem('vocaHistory', JSON.stringify(history));
+    }
+
+    function showHistoryScreen() {
+        hideAllScreens(); document.getElementById('history-screen').style.display = 'flex';
+        const container = document.getElementById('history-list-container');
+        let history = JSON.parse(localStorage.getItem('vocaHistory')) || [];
+        container.innerHTML = '';
+        if(history.length === 0) {
+            container.innerHTML = '<div style="padding:30px; text-align:center; color:#7f8c8d; font-weight:bold;">학습 기록이 없습니다. 평가에 도전해보세요!</div>';
+        } else {
+            history.forEach(item => {
+                container.innerHTML += `<div class="history-item"><div class="history-info"><span class="history-date">${item.date}</span><span class="history-mode">${item.mode}</span></div><div class="history-score">${item.score} <span style="font-size:1rem; color:#bdc3c7;">/ ${item.total}</span></div></div>`;
+            });
+        }
+    }
+    function closeHistoryScreen() { hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex'; }
+    function clearHistory() { if(confirm("모든 학습 기록을 삭제하시겠습니까? (복구할 수 없습니다)")) { localStorage.removeItem('vocaHistory'); showHistoryScreen(); } }
+
+    // --- 기본 학습/평가 기능 ---
+    function startLearningMode() { hideAllScreens(); document.getElementById('learning-screen').style.display = 'flex'; learnCurrentIdx = 0; showLearningWord(); }
+    function showLearningWord() {
+        window.speechSynthesis.cancel(); clearTimeout(learningTimeout1); clearTimeout(learningTimeout2); clearTimeout(learningTimeout3);
+        const item = vocabData[learnCurrentIdx];
+        document.getElementById('learn-current-idx').innerText = learnCurrentIdx + 1;
+        document.getElementById('learning-progress-fill').style.width = ((learnCurrentIdx) / vocabData.length * 100) + "%";
+        document.getElementById('learn-word-display').innerText = item.word;
+        document.getElementById('learn-meaning-display').style.opacity = '0'; document.getElementById('learn-eng-display').style.opacity = '0'; document.getElementById('learn-ko-sent-display').style.opacity = '0';
+        playCurrentWordSequence();
+    }
+    function playCurrentWordSequence() {
+        const item = vocabData[learnCurrentIdx];
+        speakText(item.word, 'en-US', 1.0, () => {
+            learningTimeout1 = setTimeout(() => {
+                document.getElementById('learn-meaning-display').innerText = item.meaning; document.getElementById('learn-meaning-display').style.opacity = '1';
+                speakText(item.meaning, 'ko-KR', 1.0, () => {
+                    learningTimeout2 = setTimeout(() => {
+                        document.getElementById('learn-eng-display').innerHTML = item.sent.replace("[?]", `<span style="color:var(--primary); font-weight:bold;">${item.word}</span>`); document.getElementById('learn-eng-display').style.opacity = '1';
+                        speakText(item.sent.replace("[?]", item.word), 'en-US', 1.0, () => {
+                            learningTimeout3 = setTimeout(() => { document.getElementById('learn-ko-sent-display').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, ""); document.getElementById('learn-ko-sent-display').style.opacity = '1'; }, 400);
+                        });
+                    }, 600);
+                });
+            }, 600);
+        });
+    }
+    function nextLearnWord() { if(learnCurrentIdx < vocabData.length - 1) { learnCurrentIdx++; showLearningWord(); } }
+    function prevLearnWord() { if(learnCurrentIdx > 0) { learnCurrentIdx--; showLearningWord(); } }
+    function exitLearningMode() { window.speechSynthesis.cancel(); hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex'; }
+
+    function startContinuousMode() { hideAllScreens(); document.getElementById('continuous-screen').style.display = 'flex'; contCurrentIdx = 0; isContPlaying = true; playContinuousSequence(); }
+    function playContinuousSequence() {
+        if (!isContPlaying || contCurrentIdx >= vocabData.length) { if(contCurrentIdx >= vocabData.length) exitContinuousMode(); return; }
+        const item = vocabData[contCurrentIdx];
+        document.getElementById('cont-current-idx').innerText = contCurrentIdx + 1;
+        document.getElementById('continuous-progress-fill').style.width = (contCurrentIdx / vocabData.length * 100) + "%";
+        document.getElementById('cont-word-display').innerText = item.word; document.getElementById('cont-ko-display').innerText = item.meaning;
+        speakText(item.word, 'en-US', 1.0, () => { contTimeout1 = setTimeout(() => { speakText(item.meaning, 'ko-KR', 1.0, () => { contTimeout2 = setTimeout(() => { contCurrentIdx++; playContinuousSequence(); }, 1200); }); }, 800); });
+    }
+    function toggleContinuousPlay() { isContPlaying = !isContPlaying; document.getElementById('cont-pause-btn').innerText = isContPlaying ? "일시정지" : "계속 듣기"; if(isContPlaying) playContinuousSequence(); else window.speechSynthesis.cancel(); }
+    function exitContinuousMode() { isContPlaying = false; window.speechSynthesis.cancel(); hideAllScreens(); document.getElementById('mode-screen').style.display = 'flex'; }
+
+    function startGame(mode) {
+        selectedBaseMode = mode; score = 0; currentIdx = 0; wrongQuestions = [];
+        quizSet = vocabData.sort(() => Math.random() - 0.5).slice(0, MAX_QUESTIONS).map(item => ({...item, qMode: mode === 'mixed' ? (Math.random() > 0.5 ? 'multiple' : 'subjective') : mode}));
+        hideAllScreens(); document.getElementById('game-screen').style.display = 'flex'; 
+        document.getElementById('total-idx').innerText = quizSet.length;
+        showQuestion();
+    }
+    function showQuestion() {
+        if(currentIdx >= quizSet.length) { showScore(); return; }
+        const item = quizSet[currentIdx];
+        document.getElementById('current-idx').innerText = currentIdx + 1;
+        document.getElementById('progress-fill').style.width = (currentIdx / quizSet.length * 100) + "%";
+        if (item.qMode === 'subjective') document.getElementById('target-translation').innerHTML = item.ko; else document.getElementById('target-translation').innerHTML = item.ko.replace(/<\/?[^>]+(>|$)/g, "");
+        document.getElementById('next-btn').style.display = 'none'; document.getElementById('skip-btn').style.display = 'block'; document.getElementById('check-btn').style.display = 'none'; 
+
+        if (item.qMode === 'multiple') {
+            document.getElementById('mode-indicator').innerText = "객관식"; document.getElementById('subjective-area').style.display = 'none'; document.getElementById('options-container').style.display = 'grid'; document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", "________");
+            let choices = [item.word]; while(choices.length < 4) { let r = vocabData[Math.floor(Math.random()*vocabData.length)].word; if(!choices.includes(r)) choices.push(r); }
+            document.getElementById('options-container').innerHTML = '';
+            choices.sort(() => Math.random() - 0.5).forEach(c => {
+                const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.innerText = c;
+                btn.onclick = () => {
+                    document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'none');
+                    if(c === item.word) { score++; btn.classList.add('correct'); } else { btn.classList.add('wrong'); if(!wrongQuestions.includes(item)) wrongQuestions.push(item); document.querySelectorAll('.opt-btn').forEach(b => { if(b.innerText === item.word) b.classList.add('correct'); }); }
+                    document.getElementById('next-btn').style.display = 'block'; document.getElementById('skip-btn').style.display = 'none';
+                }; document.getElementById('options-container').appendChild(btn);
+            });
+        } else if (item.qMode === 'subjective') {
+            document.getElementById('mode-indicator').innerText = "주관식"; document.getElementById('subjective-area').style.display = 'block'; document.getElementById('options-container').style.display = 'none';
+            document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span class="highlight">${item.word[0]}${"_".repeat(item.word.length-1)}</span>`);
+            const input = document.getElementById('answer-input'); input.value = ''; input.disabled = false; input.style.backgroundColor = ""; input.focus(); document.getElementById('check-btn').style.display = 'block';
+        } else if (item.qMode === 'composition') {
+            document.getElementById('mode-indicator').innerText = "문장 완성"; document.getElementById('subjective-area').style.display = 'none'; document.getElementById('options-container').style.display = 'grid';
+            const fullSent = item.sent.replace("[?]", item.word); const cleanSent = fullSent.replace(/[.,!?;]/g, ""); window.compWords = cleanSent.split(/\s+/).filter(w => w.length > 0); window.compIdx = 0; window.isCurrentWrong = false; updateComp();
+        }
+    }
+    function handleCheck() {
+        const item = quizSet[currentIdx], input = document.getElementById('answer-input');
+        if (input.value.trim() === "") { alert("정답을 입력해 주세요!"); input.focus(); return; }
+        input.disabled = true; document.getElementById('check-btn').style.display = 'none'; document.getElementById('skip-btn').style.display = 'none';
+        if(input.value.trim().toLowerCase() === item.word.toLowerCase()) { score++; input.style.backgroundColor = '#d4edda'; document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--success); font-weight:bold;">${item.word}</span>`); } 
+        else { input.style.backgroundColor = '#f8d7da'; if(!wrongQuestions.includes(item)) wrongQuestions.push(item); document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`); }
+        document.getElementById('next-btn').style.display = 'block';
+    }
+    function updateComp() {
+        const full = window.compWords, container = document.getElementById('options-container');
+        document.getElementById('target-sentence').innerHTML = full.map((w, i) => i < window.compIdx ? `<span style="color:var(--primary); font-weight:bold;">${w}</span>` : `<span style="color:#bdc3c7;">_</span>`).join(" ");
+        if(window.compIdx >= full.length) {
+            container.innerHTML = ''; if(!window.isCurrentWrong) score++; else if(!wrongQuestions.includes(quizSet[currentIdx])) wrongQuestions.push(quizSet[currentIdx]);
+            document.getElementById('target-sentence').innerHTML = `<span style="color:var(--success); font-weight:bold;">${quizSet[currentIdx].sent.replace("[?]", quizSet[currentIdx].word)}</span>`;
+            document.getElementById('next-btn').style.display = 'block'; document.getElementById('skip-btn').style.display = 'none'; return;
+        }
+        const correctWord = full[window.compIdx]; let uniqueRemaining = [...new Set(full.slice(window.compIdx))]; 
+        let otherWords = uniqueRemaining.filter(w => w !== correctWord).sort(() => Math.random() - 0.5).slice(0, 3); let choices = [correctWord, ...otherWords].sort(() => Math.random() - 0.5);
+        container.innerHTML = '';
+        choices.forEach(c => {
+            const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.innerText = c;
+            btn.onclick = () => { if(c === correctWord) { window.compIdx++; updateComp(); } else { window.isCurrentWrong = true; btn.classList.add('wrong'); setTimeout(() => btn.classList.remove('wrong'), 400); } };
+            container.appendChild(btn);
+        });
+    }
+    function skipQuestion() {
+        const item = quizSet[currentIdx]; if(!wrongQuestions.includes(item)) wrongQuestions.push(item);
+        if(item.qMode === 'composition') { document.getElementById('target-sentence').innerHTML = `<span style="color:var(--danger); font-weight:bold;">${item.sent.replace("[?]", item.word)}</span>`; document.getElementById('options-container').innerHTML = ''; } 
+        else if(item.qMode === 'multiple') { document.querySelectorAll('.opt-btn').forEach(btn => { btn.style.pointerEvents = 'none'; if(btn.innerText === item.word) btn.classList.add('correct'); }); document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`); } 
+        else { const input = document.getElementById('answer-input'); input.value = item.word; input.disabled = true; input.style.backgroundColor = "#f8d7da"; document.getElementById('check-btn').style.display = 'none'; document.getElementById('target-sentence').innerHTML = item.sent.replace("[?]", `<span style="color:var(--danger); font-weight:bold;">${item.word}</span>`); }
+        document.getElementById('skip-btn').style.display = 'none'; document.getElementById('next-btn').style.display = 'block';
+    }
+    function nextQuestion() { currentIdx++; showQuestion(); }
+    function showScore() {
+        saveLearningHistory(selectedBaseMode, score, quizSet.length);
+        hideAllScreens(); document.getElementById('score-screen').style.display = 'flex';
+        document.getElementById('display-name').innerText = userName; document.getElementById('final-correct').innerText = score; document.getElementById('final-total').innerText = quizSet.length;
+    }
+    function sendResult() {
+        const btn = document.getElementById('send-btn'); btn.disabled = true; btn.innerText = "전송 중...";
+        fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: userName, score: `${score}/${MAX_QUESTIONS}`, mode: selectedBaseMode }) })
+        .then(() => { btn.style.display = 'none'; document.getElementById('send-status').innerText = "결과가 선생님께 제출되었습니다."; });
+    }
+
+    // ==========================================
+    // 🎮 미니 게임 공통 및 유틸
+    // ==========================================
+    let currentMinigame = "";
+    let minigameScore = 0;
+    let gameIntervals = [];
+
+    function clearAllGameTimers() { gameIntervals.forEach(clearInterval); gameIntervals = []; }
+    
+    function adjustGameContainerHeight() {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        ['minigame-rain', 'minigame-typing'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.style.display === 'flex') {
+                el.style.height = h + 'px';
+                window.scrollTo(0, 0); 
+            }
+        });
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', adjustGameContainerHeight);
+        window.visualViewport.addEventListener('scroll', adjustGameContainerHeight);
+    } else {
+        window.addEventListener('resize', adjustGameContainerHeight);
+    }
+
+    function quitMinigame() {
+        if(confirm("게임을 중단하시겠습니까?")) {
+            clearAllGameTimers();
+            hideAllScreens();
+            document.getElementById('mode-screen').style.display = 'flex';
+        }
+    }
+    
+    function showMinigameResult(gameId, gameTitle, score, suffix="점") {
+        clearAllGameTimers();
+        hideAllScreens();
+        
+        let highscore = localStorage.getItem(`high_${gameId}`) || 0;
+        if(score > highscore) { highscore = score; localStorage.setItem(`high_${gameId}`, highscore); }
+        
+        document.getElementById('game-result-screen').style.display = 'flex';
+        document.getElementById('result-game-title').innerText = gameTitle;
+        document.getElementById('result-score').innerText = score + suffix;
+        document.getElementById('result-highscore').innerText = highscore + suffix;
+        currentMinigame = gameId;
+        minigameScore = score + suffix;
+    }
+    
+    function restartCurrentMinigame() {
+        if(currentMinigame === "rain") startRainGame();
+        else if(currentMinigame === "typing") startTypingGame();
+        else if(currentMinigame === "match") startMatchGame();
+    }
+    
+    function shareScore() {
+        const gameTitles = { rain: "단어 비 내리기", typing: "스피드 문장 타자", match: "단어 짝맞추기" };
+        const shareText = `🔥 VOCA Master 랭킹 도전!\n${userName} 학생이 [${gameTitles[currentMinigame]}] 게임에서 ${minigameScore}을 기록했습니다!\n\n과연 이 기록을 깰 수 있을까요? 🏆`;
+        if (navigator.share) {
+            navigator.share({ title: 'VOCA Master 게임 기록', text: shareText, url: window.location.href }).catch(console.error);
+        } else {
+            alert("공유 기능이 지원되지 않는 브라우저입니다. 텍스트를 복사해서 공유해주세요!\n\n" + shareText);
+        }
+    }
+
+    // ==========================================
+    // 🌧️ 1. 단어 비 내리기 (속도 하향 및 개수 제한)
+    // ==========================================
+    let rainWords = [], rainLife = 5;
+    let rainSpeedBase = 0.25; 
+    let rainSpeedMod = 1.0;  
+    let rainFreeze = false;  
+    
+    const BONUS_TYPES = ['freeze', 'slow', 'life', 'push', 'bomb'];
+    const BONUS_KOR = { 'freeze': '🧊 얼음!', 'slow': '🐌 거북이 모드!', 'life': '💖 생명력 +1', 'push': '🌪️ 태풍!', 'bomb': '💣 폭탄 제거!' };
+
+    function startRainGame() {
+        hideAllScreens(); 
+        const rainContainer = document.getElementById('minigame-rain');
+        rainContainer.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+        
+        document.getElementById('rain-container').innerHTML = '<div id="rain-toast" class="rain-toast"></div>';
+        minigameScore = 0; rainLife = 5; 
+        rainSpeedBase = 0.25; rainSpeedMod = 1.0; rainFreeze = false;
+        updateRainStats();
+        
+        const inputField = document.getElementById('rain-input');
+        inputField.value = '';
+        adjustGameContainerHeight();
+        
+        setTimeout(() => {
+            inputField.focus();
+            setTimeout(() => { startRainLoop(); }, 500);
+        }, 100);
+    }
+    
+    function startRainLoop() {
+        rainWords = []; clearAllGameTimers();
+        let spawnRate = 2500; 
+        
+        gameIntervals.push(setInterval(() => {
+            if(rainLife <= 0 || rainFreeze) return;
+            
+            const activeCount = rainWords.filter(w => !w.isDead).length;
+            if(activeCount >= 3) return;
+
+            const wordData = vocabData[Math.floor(Math.random() * vocabData.length)];
+            const span = document.createElement('span');
+            
+            let isBonus = Math.random() < 0.2;
+            let myBonusType = null;
+            
+            span.className = 'falling-word';
+            span.innerText = wordData.word;
+            
+            if(isBonus) {
+                myBonusType = BONUS_TYPES[Math.floor(Math.random() * BONUS_TYPES.length)];
+                span.classList.add('bonus-word', `bonus-${myBonusType}`);
+            }
+
+            let startX = Math.random() * 70;
+            let vx = (Math.random() * 0.3 + 0.1) * (Math.random() < 0.5 ? 1 : -1); 
+
+            span.style.left = startX + "%"; 
+            span.style.top = "-40px";
+            document.getElementById('rain-container').appendChild(span);
+            
+            rainWords.push({ 
+                el: span, text: wordData.word, 
+                top: -40, left: startX, vx: vx, 
+                isBonus: isBonus, bonusType: myBonusType, isDead: false 
+            });
+            
+            if(minigameScore > 0 && minigameScore % 50 === 0) {
+                rainSpeedBase += 0.01; 
+            }
+        }, spawnRate));
+        
+        gameIntervals.push(setInterval(() => {
+            if(rainFreeze) return; 
+            
+            const containerHeight = document.getElementById('rain-container').offsetHeight;
+            for(let i = rainWords.length - 1; i >= 0; i--) {
+                let w = rainWords[i];
+                if(w.isDead) continue;
+
+                w.top += (rainSpeedBase * rainSpeedMod);
+                w.left += (w.vx * rainSpeedMod);
+
+                if(w.left <= 0) { w.left = 0; w.vx *= -1; }
+                if(w.left >= 75) { w.left = 75; w.vx *= -1; }
+
+                w.el.style.top = w.top + "px";
+                w.el.style.left = w.left + "%";
+                
+                if(w.top > containerHeight - 40) {
+                    w.el.remove(); w.isDead = true; rainWords.splice(i, 1);
+                    rainLife--; updateRainStats();
+                    
+                    const rc = document.getElementById('rain-container');
+                    rc.style.borderColor = "var(--danger)"; setTimeout(() => rc.style.borderColor = "#dce4ec", 300);
+
+                    if(rainLife <= 0) showMinigameResult("rain", "🌧️ 단어 비 내리기", minigameScore);
+                }
+            }
+        }, 50));
+    }
+    
+    function checkRainWord() {
+        const input = document.getElementById('rain-input');
+        const val = input.value.trim().toLowerCase();
+        let matched = false;
+        
+        for(let i = 0; i < rainWords.length; i++) {
+            if(!rainWords[i].isDead && rainWords[i].text.toLowerCase() === val) {
+                let w = rainWords[i];
+                w.el.remove(); w.isDead = true; 
+                minigameScore += 10; 
+                
+                if(w.isBonus) triggerBonusEvent(w.bonusType);
+                
+                rainWords.splice(i, 1);
+                updateRainStats(); 
+                matched = true; 
+                break;
+            }
+        }
+        if(matched) input.value = '';
+    }
+
+    function triggerBonusEvent(type) {
+        showRainToast(BONUS_KOR[type]);
+        
+        if (type === 'freeze') {
+            rainFreeze = true;
+            setTimeout(() => { rainFreeze = false; }, 3000);
+        } 
+        else if (type === 'slow') {
+            rainSpeedMod = 0.3; 
+            setTimeout(() => { rainSpeedMod = 1.0; }, 5000);
+        } 
+        else if (type === 'life') {
+            rainLife++; 
+            updateRainStats();
+        } 
+        else if (type === 'push') {
+            rainWords.forEach(w => {
+                if(!w.isDead) { w.top -= 120; if(w.top < -40) w.top = -40; }
+            });
+        } 
+        else if (type === 'bomb') {
+            let activeWords = rainWords.filter(w => !w.isDead);
+            activeWords.sort((a, b) => b.top - a.top); 
+            
+            let removedCount = 0;
+            for(let i = 0; i < activeWords.length; i++) {
+                if(removedCount >= 2) break;
+                let bw = activeWords[i];
+                bw.isDead = true;
+                bw.el.style.transform = "scale(0) rotate(180deg)";
+                bw.el.style.opacity = "0";
+                setTimeout(() => bw.el.remove(), 300);
+                minigameScore += 5; 
+                removedCount++;
+            }
+            rainWords = rainWords.filter(w => !w.isDead);
+            updateRainStats();
+        }
+    }
+
+    function showRainToast(msg) {
+        const toast = document.getElementById('rain-toast');
+        if(!toast) return;
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    function updateRainStats() { 
+        document.getElementById('rain-score').innerText = minigameScore; 
+        document.getElementById('rain-life').innerText = rainLife; 
+    }
+
+    // ==========================================
+    // ⌨️ 2. 스피드 문장 타자 
+    // ==========================================
+    let typeTime = 180, currentTypeTarget = "";
+    function startTypingGame() {
+        hideAllScreens(); 
+        const typeContainer = document.getElementById('minigame-typing');
+        typeContainer.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        minigameScore = 0; typeTime = 180; clearAllGameTimers();
+        document.getElementById('type-score').innerText = minigameScore;
+        document.getElementById('type-time').innerText = typeTime;
+        document.getElementById('type-input').value = '';
+        nextTypingSentence();
+        
+        adjustGameContainerHeight();
+        
+        setTimeout(() => {
+            document.getElementById('type-input').focus();
+            gameIntervals.push(setInterval(() => {
+                typeTime--; document.getElementById('type-time').innerText = typeTime;
+                if(typeTime <= 0) showMinigameResult("typing", "⌨️ 스피드 문장 타자", minigameScore);
+            }, 1000));
+        }, 100);
+    }
+    
+    function nextTypingSentence() {
+        const item = vocabData[Math.floor(Math.random() * vocabData.length)];
+        currentTypeTarget = item.sent.replace("[?]", item.word);
+        document.getElementById('type-target-text').innerText = currentTypeTarget;
+        document.getElementById('type-input').value = '';
+    }
+    
+    function checkTypingMatch() {
+        const val = document.getElementById('type-input').value;
+        if(val === currentTypeTarget) { minigameScore += 20; document.getElementById('type-score').innerText = minigameScore; nextTypingSentence(); }
+    }
+
+    // ==========================================
+    // 🃏 3. 단어 짝맞추기 
+    // ==========================================
+    let matchCards = [], firstMatch = null, matchPairsFound = 0, matchTime = 0;
+    function startMatchGame() {
+        hideAllScreens(); document.getElementById('minigame-match').style.display = 'flex';
+        minigameScore = 0; matchPairsFound = 0; matchTime = 0; firstMatch = null; clearAllGameTimers();
+        document.getElementById('match-score').innerText = matchPairsFound; document.getElementById('match-time').innerText = matchTime;
+        
+        let selected = vocabData.sort(() => Math.random() - 0.5).slice(0, 6);
+        let deck = [];
+        
+        selected.forEach((item, idx) => { 
+            let cardObj = { text: item.word, hint: item.meaning, id: idx };
+            deck.push(cardObj, cardObj); 
+        });
+        
+        deck.sort(() => Math.random() - 0.5); 
+        
+        const container = document.getElementById('match-container'); container.innerHTML = '';
+        deck.forEach((card, idx) => {
+            const btn = document.createElement('div'); btn.className = 'match-card';
+            btn.innerHTML = `
+                <div class="card-content">
+                    <div class="match-word">${card.text}</div>
+                    <div class="match-mean">${card.hint}</div>
+                </div>
+            `;
+            btn.onclick = () => flipMatchCard(btn, card);
+            container.appendChild(btn);
+        });
+        
+        gameIntervals.push(setInterval(() => { matchTime++; document.getElementById('match-time').innerText = matchTime; }, 1000));
+    }
+    
+    function flipMatchCard(btn, cardData) {
+        if(btn.classList.contains('flipped') || btn.classList.contains('matched') || document.querySelectorAll('.match-card.flipped:not(.matched)').length >= 2) return;
+        btn.classList.add('flipped');
+        
+        if(!firstMatch) { firstMatch = { btn: btn, data: cardData }; return; }
+        
+        if(firstMatch.data.id === cardData.id) {
+            setTimeout(() => { 
+                btn.classList.add('matched'); firstMatch.btn.classList.add('matched'); 
+                firstMatch = null; matchPairsFound++; 
+                document.getElementById('match-score').innerText = matchPairsFound; 
+                if(matchPairsFound >= 6) showMinigameResult("match", "🃏 단어 짝맞추기", matchTime, "초"); 
+            }, 400);
+        } else {
+            setTimeout(() => { 
+                btn.classList.remove('flipped'); firstMatch.btn.classList.remove('flipped'); 
+                firstMatch = null; 
+            }, 800);
+        }
+    }
+</script>
+</body>
+</html>
